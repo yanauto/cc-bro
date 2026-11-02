@@ -1,0 +1,119 @@
+#!/usr/bin/env node
+import { spawn } from 'node:child_process'
+import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+
+const args = process.argv.slice(2)
+const option = name => args[args.indexOf(name) + 1]
+const provider = option('--provider')
+const fakeKey = 'synthetic-' + 'credential-for-offline-test'
+const send = obj => process.stdout.write(JSON.stringify(obj) + '\n')
+if (args.includes('--version')) {
+  console.log('1.4.0')
+} else if (args.includes('--list-models')) {
+  console.log('provider  model           context  max-out  thinking  images')
+  console.log('deepseek  deepseek-flash  1M       384K     yes       yes')
+} else if (args[0] === 'auth') {
+  if (args[1] === 'check' && args.includes('--no-refresh')) {
+    if (process.env.CC_BRO_FIXTURE_CANARY) {
+      try {
+        writeFileSync(process.env.CC_BRO_FIXTURE_CANARY, 'unexpected write')
+        process.exit(3)
+      } catch (err) { if (!['EPERM', 'EACCES'].includes(err.code)) throw err }
+    }
+    const type = provider === 'oauth-fixture' ? 'oauth' : 'api_key'
+    if (type === 'oauth' && args.includes('--credentials')) process.exit(2)
+    send({ status: 'ready', authType: type, credentials: args.includes('--credentials') ? fakeKey : undefined })
+  } else if (args[1] === 'print-api-key' && process.env.CC_BRO_API_KEY === fakeKey) {
+    console.log(fakeKey)
+  } else process.exitCode = 1
+} else {
+  const model = option('--model')
+  const id = option('--session-id')
+  const sessions = option('--session-dir')
+  const data = dirname(process.env.HOME)
+  if (process.env.CC_BRO_API_KEY !== fakeKey || !sessions.startsWith(data + '/') ||
+      !process.env.PI_CODING_AGENT_DIR.startsWith(data + '/') || !args.includes('--no-extensions')) process.exit(2)
+  const file = join(sessions, id + '.txt')
+  let timer
+  let steered = ''
+  let current = ''
+  const ack = (req, data, error) => send({ type: 'response', id: req.id, command: req.type, success: !error, error, data })
+  function finish(text, error) {
+    send({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text }], stopReason: error ? 'error' : 'stop', errorMessage: error } })
+    send({ type: 'agent_end', willRetry: false })
+    send({ type: 'agent_settled', aborted: false })
+  }
+  function prompt(req) {
+    current = req.message
+    steered = ''
+    if (current === 'reject prompt') return ack(req, null, 'rejected prompt')
+    ack(req, { disposition: 'started' })
+    send({ type: 'agent_start' })
+    send({ type: 'message_start', message: { role: 'user', content: current } })
+    send({ type: 'fixture.future', content: 'raw\u2028value', probe: fakeKey })
+    if (current.startsWith('isolation ')) {
+      try { readFileSync(current.slice('isolation '.length)); return finish('read allowed') }
+      catch (err) { return finish(['EPERM', 'EACCES'].includes(err.code) ? 'read denied' : err.code) }
+    }
+    if (current === 'crash') return process.exit(7)
+    if (current === 'missing terminal message') return send({ type: 'agent_settled', aborted: false })
+    if (current === 'two replies') {
+      send({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text: 'Checking files' }], stopReason: 'toolUse' } })
+      return finish('Checked')
+    }
+    if (current === 'worker-config') return finish(model + ' ' + option('--thinking'))
+    if (current === 'fail') return finish('', 'fixture provider failed')
+    if (current.startsWith('remember ')) writeFileSync(file, current.slice(9))
+    if (current === 'recall') return finish(readFileSync(file, 'utf8'))
+    if (current === 'orphan') {
+      const shell = spawn('/bin/bash', ['-c', 'exec 19<"$CC_BRO_MARKER"; sleep 60 </dev/null >/dev/null 2>&1 & echo $! > orphan.pid'], { detached: true, stdio: 'ignore' })
+      shell.once('exit', () => finish('orphan started'))
+      return
+    }
+    if (['hold', 'no abort', 'late'].includes(current)) {
+      send({ type: 'tool_execution_start', toolName: 'read', args: { path: 'fixture.txt' } })
+      timer = setInterval(() => {
+        if (!existsSync('release')) return
+        clearInterval(timer)
+        send({ type: 'tool_execution_end', toolName: 'read', isError: false })
+        finish(steered || 'released')
+      }, 40)
+      return
+    }
+    finish(current)
+  }
+  function receive(req) {
+    if (req.type === 'get_state') return ack(req, { model: { provider, id: model === 'wrong-model' ? 'fallback' : model }, sessionId: id })
+    if (req.type === 'prompt') return prompt(req)
+    if (req.type === 'steer') {
+      if (req.message === 'reject steer') return ack(req, null, 'rejected steer')
+      if (current === 'late') {
+        clearInterval(timer)
+        finish('original turn')
+      } else {
+        steered = req.message
+        send({ type: 'message_start', message: { role: 'user', content: [{ type: 'text', text: steered }] } })
+      }
+      return ack(req, { disposition: 'queued' })
+    }
+    if (req.type === 'abort') {
+      if (current === 'no abort') return
+      clearInterval(timer)
+      send({ type: 'agent_settled', aborted: true })
+      return ack(req)
+    }
+    if (req.type === 'clear_queue') { appendFileSync('cleared', 'yes\n'); return ack(req) }
+  }
+  let buffer = ''
+  process.stdin.setEncoding('utf8')
+  for await (const part of process.stdin) {
+    buffer += part
+    let lf
+    while ((lf = buffer.indexOf('\n')) !== -1) {
+      receive(JSON.parse(buffer.slice(0, lf)))
+      buffer = buffer.slice(lf + 1)
+    }
+  }
+  process.exit()
+}

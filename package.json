@@ -1,0 +1,44 @@
+{
+  "name": "cc-bro",
+  "version": "0.1.0",
+  "description": "Manage projects in Claude Code, delegate tickets to pi agents, and follow their progress on a local board.",
+  "license": "Apache-2.0",
+  "author": "yanauto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanauto/cc-bro.git"
+  },
+  "keywords": [
+    "claude-code",
+    "pi",
+    "agents",
+    "multi-agent",
+    "codex",
+    "deepseek"
+  ],
+  "files": [
+    "bin",
+    "lib",
+    "plugin",
+    "templates/room",
+    "bundle/board",
+    "scripts/package-board.mjs",
+    "README.md",
+    "LICENSE"
+  ],
+  "type": "module",
+  "bin": {
+    "cc-bro": "bin/cc-bro"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test test/offline.test.mjs test/p2.test.mjs test/p3.test.mjs test/p4.test.mjs",
+    "test:live": "node --test test/live.test.mjs",
+    "test:plugin": "node --test test/plugin.test.mjs",
+    "test:p2-live": "node --test test/p2-live.test.mjs",
+    "test:p4-live": "node --test test/p4-live.test.mjs",
+    "prepack": "node scripts/package-board.mjs"
+  }
+}
