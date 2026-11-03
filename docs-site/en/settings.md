@@ -21,3 +21,6 @@ An unknown login status is not a failed login. Use **Log in with CLI** to open i
 To add a pi provider, enter `pi:provider` in the worker list and allow it explicitly. To add another CLI, use `custom:name` and follow [the custom CLI guide](custom-cli.md). No wildcard pi permission is implied.
 
 Proposed notes remain pending until a user accepts them. The page shows the current note before replacement. Dismissal preserves the user’s note.
+
+
+**Model visibility** lists detected models with capabilities and descriptions. Search and select **Hide** to hide a family. A project can inherit or replace the global hidden list. Model and effort overrides are per bro, globally or per project; the roster reports the effective defaults.

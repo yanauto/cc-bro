@@ -1,0 +1,633 @@
+{
+  "as_of": "2026-11-03",
+  "source": "Grok research (official docs, public benchmarks, X developer posts Aug-Nov 2026), merged by hui. Not independently verified; grades are relative and change fast.",
+  "match_rule": "Match a CLI's model ID to an entry by exact id or alias, after stripping effort/speed suffixes such as -low, -medium, -high, -xhigh, -max, -fast, -thinking.",
+  "picks": {
+    "hardest_coding_long_tasks": {
+      "first": [
+        "gpt-6-astra",
+        "gemini-4-argon",
+        "claude-fable-5"
+      ],
+      "backup": [
+        "gpt-6.1-sol",
+        "kimi-k3.1-pro",
+        "grok-4.7"
+      ]
+    },
+    "daily_coding": {
+      "first": [
+        "gpt-6.1-sol",
+        "claude-sonnet-5"
+      ],
+      "backup": [
+        "gemini-3.8-flash",
+        "deepseek-v4.1-flash"
+      ]
+    },
+    "fast_cheap_bulk": {
+      "first": [
+        "deepseek-v4.1-flash",
+        "gemini-3.8-flash"
+      ],
+      "backup": [
+        "gpt-6.1-terra",
+        "glm-5.3-flash",
+        "gpt-6-luna"
+      ]
+    },
+    "review_find_bugs": {
+      "first": [
+        "gpt-6-astra",
+        "claude-opus-5"
+      ],
+      "backup": [
+        "gpt-6.1-sol",
+        "glm-5.3"
+      ],
+      "note": "Prefer a different vendor from the writer."
+    },
+    "vision_ui_computer_use": {
+      "first": [
+        "gpt-6.1-terra",
+        "gemini-4-argon"
+      ],
+      "backup": [
+        "gemini-3.8-flash"
+      ]
+    },
+    "research": {
+      "first": [
+        "gemini-4-argon",
+        "gpt-6-astra"
+      ],
+      "backup": [
+        "kimi-k3.1-pro"
+      ]
+    },
+    "docs_simple_writing": {
+      "first": [
+        "gpt-6-luna",
+        "deepseek-v4.1-flash"
+      ],
+      "backup": [
+        "glm-5.3-flash",
+        "claude-haiku-5-5"
+      ]
+    },
+    "chinese": {
+      "first": [
+        "glm-5.3",
+        "deepseek-v4.1-flash",
+        "qwen3.8-max"
+      ],
+      "backup": [
+        "kimi-k3.1-pro"
+      ]
+    }
+  },
+  "effort_advice": "Most developers default to medium. Raise to high/xhigh/max for hard bugs, architecture and long multi-step tasks; for routine edits, docs and bulk work high effort is slower and rarely worth it.",
+  "models": [
+    {
+      "id": "gpt-6-astra",
+      "vendor": "OpenAI",
+      "tier": "flagship",
+      "grade": "S",
+      "speed": "medium-slow",
+      "best_for": [
+        "hardest long tasks",
+        "design decisions",
+        "review",
+        "research"
+      ],
+      "summary": {
+        "en": "OpenAI's strongest model for hard end-to-end agent work; some developers find it faster than Claude Opus on long tasks. Expensive; save for the hardest work.",
+        "zh": "OpenAI 最强，最难的端到端 agent 活；有开发者觉得长任务比 Opus 还快。贵，留给最难的活。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1050000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "gpt-6.1-sol",
+      "vendor": "OpenAI",
+      "tier": "workhorse",
+      "grade": "A",
+      "speed": "medium",
+      "best_for": [
+        "writing code",
+        "large repos",
+        "long tasks that run tests until green",
+        "review"
+      ],
+      "summary": {
+        "en": "Balanced main coder: close to Astra on agentic coding at a fraction of the cost. medium for routine edits, high/xhigh for hard bugs. Occasionally takes shortcuts at low effort.",
+        "zh": "平衡的主力写手：agentic 编程接近 Astra，成本低得多。日常 medium，难 bug 开 high/xhigh。低档偶尔偷懒。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1050000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "gpt-6.1-terra",
+      "vendor": "OpenAI",
+      "tier": "fast",
+      "grade": "A",
+      "speed": "fast",
+      "best_for": [
+        "vision",
+        "computer use",
+        "everyday coding",
+        "docs"
+      ],
+      "summary": {
+        "en": "Cheaper, faster sibling of Sol with strong vision and computer use. Good execution layer; use Sol or Astra for the hardest pure coding.",
+        "zh": "Sol 的便宜快速版，看图和电脑操作强。适合当执行层；最难的纯编程用 Sol 或 Astra。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1050000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "gpt-6-luna",
+      "vendor": "OpenAI",
+      "tier": "cheap",
+      "grade": "B",
+      "speed": "fast",
+      "best_for": [
+        "simple docs",
+        "extraction",
+        "high-volume chores"
+      ],
+      "summary": {
+        "en": "Cheapest GPT-6 tier for simple, high-volume work. Weak on complex coding.",
+        "zh": "GPT-6 最便宜一档，简单量大的活。复杂编程弱。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1050000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "gpt-6-sol",
+      "vendor": "OpenAI",
+      "tier": "superseded",
+      "grade": "A-",
+      "speed": "medium",
+      "summary": {
+        "en": "Superseded by gpt-6.1-sol; prefer that.",
+        "zh": "已被 gpt-6.1-sol 取代，优先用它。"
+      },
+      "confidence": "confirmed"
+    },
+    {
+      "id": "gpt-5.6-sol",
+      "aliases": [
+        "gpt-5.6-terra",
+        "gpt-5.6-luna"
+      ],
+      "vendor": "OpenAI",
+      "tier": "previous generation",
+      "grade": "B",
+      "speed": "medium",
+      "summary": {
+        "en": "Previous generation (July 2026), clearly behind GPT-6.x. Use only if newer models are unavailable.",
+        "zh": "上一代（2026-07），明显落后 GPT-6.x，没有新模型时才用。"
+      },
+      "confidence": "confirmed"
+    },
+    {
+      "id": "gemini-4-argon",
+      "vendor": "Google",
+      "tier": "flagship",
+      "grade": "S",
+      "speed": "medium",
+      "best_for": [
+        "hardest coding",
+        "research",
+        "long context",
+        "multimodal"
+      ],
+      "summary": {
+        "en": "Google's flagship; top-tier on agentic coding benchmarks and strong at long context and multimodal. Less discussed for daily coding than Claude or GPT.",
+        "zh": "Google 旗舰，agentic 编程榜单顶尖，长上下文和多模态强。日常写代码讨论少于 Claude 和 GPT。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1048576,
+        "max_output_tokens": 65536
+      }
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "aliases": [
+        "gemini-3.7-flash"
+      ],
+      "vendor": "Google",
+      "tier": "fast",
+      "grade": "A",
+      "speed": "fast",
+      "best_for": [
+        "writing code",
+        "long agent tasks",
+        "vision",
+        "good value"
+      ],
+      "summary": {
+        "en": "Fast, good-value coder for long agent tasks and vision; slightly behind Argon on the hardest reasoning. 3.7 is a bit weaker.",
+        "zh": "又快又划算，长 agent 任务和看图都行；最难推理略逊 Argon。3.7 稍弱。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "audio",
+          "video",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1048576,
+        "max_output_tokens": 65536
+      }
+    },
+    {
+      "id": "grok-4.7",
+      "vendor": "xAI",
+      "tier": "flagship",
+      "grade": "A",
+      "speed": "medium (fast variants exist)",
+      "best_for": [
+        "writing code",
+        "long multi-hour tasks",
+        "review"
+      ],
+      "summary": {
+        "en": "xAI's flagship, clearly better than 4.6 at long agent runs; some boards still trail the top Claude and GPT models. Fast variants trade depth for speed.",
+        "zh": "xAI 旗舰，长时间 agent 明显强于 4.6；部分榜仍落后最强的 Claude 和 GPT。fast 版拿深度换速度。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 500000,
+        "max_output_tokens": null
+      }
+    },
+    {
+      "id": "composer-2.5",
+      "vendor": "Cursor",
+      "tier": "specialized",
+      "grade": "A",
+      "speed": "fast",
+      "best_for": [
+        "coding inside cursor-agent",
+        "large repos"
+      ],
+      "summary": {
+        "en": "Cursor's own model, tuned for its tools and terminal; good value inside cursor-agent, not used elsewhere.",
+        "zh": "Cursor 自家模型，针对它的工具和终端调过；在 cursor-agent 里划算，别处用不到。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 200000,
+        "max_output_tokens": null
+      }
+    },
+    {
+      "id": "deepseek-v4.1-flash",
+      "aliases": [
+        "deepseek-flash"
+      ],
+      "vendor": "DeepSeek",
+      "tier": "fast",
+      "grade": "A",
+      "speed": "fast",
+      "best_for": [
+        "execution layer",
+        "bulk coding",
+        "long sessions",
+        "Chinese"
+      ],
+      "summary": {
+        "en": "Very popular low-cost executor: many developers let Claude plan and review while DeepSeek writes the code. 1M context. Can queue at peak hours and is shallower than Claude on hard problems.",
+        "zh": "很热门的便宜执行层：很多人让 Claude 规划和审查，DeepSeek 写代码。1M 上下文。高峰会排队，难题深度不如 Claude。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 384000
+      }
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "vendor": "DeepSeek",
+      "tier": "being retired",
+      "grade": "A",
+      "speed": "medium",
+      "summary": {
+        "en": "Being replaced by deepseek-v4.1-flash, which beats it on several tasks; prefer the flash model.",
+        "zh": "正被 deepseek-v4.1-flash 取代，后者多项更强，优先用 flash。"
+      },
+      "confidence": "confirmed"
+    },
+    {
+      "id": "glm-5.3",
+      "vendor": "Zhipu",
+      "tier": "workhorse",
+      "grade": "A",
+      "speed": "medium",
+      "best_for": [
+        "writing code",
+        "review",
+        "Chinese"
+      ],
+      "summary": {
+        "en": "Strong open-weight coder, widely used in the Chinese community; still behind the top US models on the hardest tasks.",
+        "zh": "很强的开源写手，中文圈用得多；最难的活仍落后美国顶尖模型。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1048576,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "glm-5.3-flash",
+      "aliases": [
+        "glm-5.3-highspeed"
+      ],
+      "vendor": "Zhipu",
+      "tier": "fast",
+      "grade": "A-",
+      "speed": "fast",
+      "best_for": [
+        "cheap coding",
+        "vision",
+        "bulk",
+        "Chinese"
+      ],
+      "summary": {
+        "en": "Cheap multimodal GLM for bulk and simple coding. highspeed is a speed-focused variant with little public feedback.",
+        "zh": "便宜的多模态 GLM，适合批量和简单编程。highspeed 是提速版，公开反馈很少。"
+      },
+      "confidence": "probable",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "video"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "kimi-k3.1-pro",
+      "aliases": [
+        "kimi-k3"
+      ],
+      "vendor": "Moonshot",
+      "tier": "flagship",
+      "grade": "A",
+      "speed": "slow",
+      "best_for": [
+        "long tasks",
+        "long context",
+        "research"
+      ],
+      "summary": {
+        "en": "Strong at long tasks and long context, near the frontier on terminal benchmarks; slow. Some users note a borrowed style. K3 is the weaker predecessor.",
+        "zh": "长任务和长上下文强，终端类榜单接近前沿；慢。有人吐槽风格像别家。K3 是较弱的前代。"
+      },
+      "confidence": "probable",
+      "modalities": {
+        "input": [
+          "text",
+          "image"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1048576,
+        "max_output_tokens": null
+      }
+    },
+    {
+      "id": "qwen3.8-max",
+      "vendor": "Alibaba",
+      "tier": "flagship",
+      "grade": "A",
+      "speed": "medium",
+      "best_for": [
+        "coding",
+        "Chinese",
+        "multimodal"
+      ],
+      "summary": {
+        "en": "Alibaba's flagship; capable at coding, Chinese and multimodal, but rarely discussed as a daily coding model.",
+        "zh": "阿里旗舰，编程、中文、多模态都行，但很少有人拿它当日常写代码的主力。"
+      },
+      "confidence": "probable",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "video"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 131072
+      }
+    },
+    {
+      "id": "claude-opus-5",
+      "aliases": [
+        "claude-opus-5-5"
+      ],
+      "vendor": "Anthropic",
+      "tier": "flagship",
+      "grade": "S",
+      "speed": "medium",
+      "best_for": [
+        "planning",
+        "architecture",
+        "large refactors",
+        "review"
+      ],
+      "summary": {
+        "en": "Most trusted for complex refactors and long tasks; expensive. As a worker it duplicates the Claude manager, so mainly useful as an independent reviewer through another CLI.",
+        "zh": "复杂重构和长任务最受信任，但贵。当工人和 Claude 经理重复，主要用来经别的 CLI 当独立审查。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "claude-sonnet-5",
+      "aliases": [
+        "claude-sonnet-5-5"
+      ],
+      "vendor": "Anthropic",
+      "tier": "workhorse",
+      "grade": "A",
+      "speed": "fast",
+      "summary": {
+        "en": "Fast, solid daily coder with good value.",
+        "zh": "又快又稳的日常写手，性价比好。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "claude-fable-5",
+      "aliases": [
+        "claude-fable-5-1"
+      ],
+      "vendor": "Anthropic",
+      "tier": "flagship",
+      "grade": "S",
+      "speed": "medium-slow",
+      "summary": {
+        "en": "Anthropic's strongest and most expensive model, for the hardest reasoning and agent work.",
+        "zh": "Anthropic 最强也最贵，最难的推理和 agent 活。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 128000
+      }
+    },
+    {
+      "id": "claude-haiku-5-5",
+      "vendor": "Anthropic",
+      "tier": "cheap",
+      "grade": "B",
+      "speed": "fastest",
+      "summary": {
+        "en": "Fastest, cheapest Claude for simple high-volume work.",
+        "zh": "最快最便宜的 Claude，简单量大的活。"
+      },
+      "confidence": "confirmed",
+      "modalities": {
+        "input": [
+          "text",
+          "image",
+          "pdf"
+        ],
+        "output": [
+          "text"
+        ],
+        "context_tokens": 1000000,
+        "max_output_tokens": 128000
+      }
+    }
+  ],
+  "modalities_source": "Grok, official model docs only. These are model-level API limits; a CLI or subscription may expose less (e.g. pi reports 272K/500K context for gpt-6.x via the Codex subscription). CLI-reported values win.",
+  "modalities_as_of": "2026-11-03"
+}

@@ -11,7 +11,7 @@
 
 ## 花名册与备注提议
 
-`cc-bro roster [--json]` 列出允许的工人、CLI、模型、档位、登录、能力、备注和规矩，派活前先读。
+`cc-bro roster [--worker ID] [--full] [--json]` 默认紧凑显示模型系列、生效默认值、输入能力、备注和规矩；不允许的 bro 只列一行，旧型号折叠。`--worker ID` 只查一个 bro，`--full` 展开具体变体、上限与完整元数据。派活前先读紧凑版。
 
 `cc-bro note 工人 文本 [--json]` 只创建备注提议，用户在配置页确认才生效。
 
@@ -41,3 +41,6 @@ cc-bro done NAME [--json]
 | --- | --- |
 | `cc-bro stop NAME [--json]` | 停止当前项目的一个具名工人。 |
 | `cc-bro shutdown` | 停止整个本机服务，包括该服务下所有项目的运行单和排队单。未完成轮次不会自动续跑。 |
+
+
+`say --attach 文件` 可重复，给已确认支持的 CLI＋模型发送[原生图片附件](model-inputs.md)。

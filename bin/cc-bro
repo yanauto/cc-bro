@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { createInterface } from 'node:readline/promises'
 import { chooseAllow, chooseDefault } from '../lib/worker-policy.mjs'
+import { resolve } from 'node:path'
+import { rosterOutput, rosterText } from '../lib/roster-output.mjs'
 import { parseArgs } from 'node:util'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { modelVariables } from '../lib/model-env.mjs'
@@ -13,10 +15,10 @@ const help = [
   'cc-bro setup      Install or update the user skill',
   'cc-bro init [--allow worker,worker] [--default-worker worker]',
   'cc-bro ui [--no-open]',
-  'cc-bro roster [--json]    Inspect allowed workers before dispatch',
+  'cc-bro roster [--worker id] [--full] [--json]    Compact models and project permissions; expand only when needed',
   'cc-bro note <worker> <text> [--json]    Propose a note for user confirmation',
   'cc-bro done <name>',
-  'cc-bro say <name> <message> [--worktree] [--model id] [--effort level] [--title title] [--worker id] [--bg] [--json]',
+  'cc-bro say <name> <message> [--attach file ...] [--worktree] [--model id] [--effort level] [--title title] [--worker id] [--bg] [--json]',
   'cc-bro review <name> --by worker [--model id] [--effort level] [--bg] [--json]',
   'cc-bro ls [--json]',
   'cc-bro show <name> [--all] [--json]',
@@ -90,11 +92,11 @@ async function main() {
   if (cmd === 'setup' && !args.length) return console.log(setup())
   if (!cmd) return console.log(help)
   if (['-h', '--help', 'help'].includes(cmd)) return console.log(help)
-  const specs = { init: [0, 'allow', 'default-worker', 'json'], ui: [0, 'no-open'], roster: [0, 'json'], note: [2, 'json'], done: [1, 'json'], review: [1,'by','model','effort','bg','json'], say: [2, 'worktree', 'title', 'model', 'effort', 'worker', 'bg', 'json'], ls: [0, 'json'], show: [1, 'all', 'json'],
+  const specs = { init: [0, 'allow', 'default-worker', 'json'], ui: [0, 'no-open'], roster: [0, 'worker', 'full', 'json'], note: [2, 'json'], done: [1, 'json'], review: [1,'by','model','effort','bg','json'], say: [2, 'attach', 'worktree', 'title', 'model', 'effort', 'worker', 'bg', 'json'], ls: [0, 'json'], show: [1, 'all', 'json'],
     watch: [0], wait: [2, 'json'], stop: [1, 'json'], shutdown: [0] }
   if (!Object.hasOwn(specs, cmd)) throw new Error(help)
   const [count, ...flags] = specs[cmd]
-  const options = Object.fromEntries(flags.map(k => [k, { type: ['model', 'effort', 'worker', 'by', 'title', 'allow', 'default-worker'].includes(k) ? 'string' : 'boolean' }]))
+  const options = Object.fromEntries(flags.map(k => [k, k === 'attach' ? { type: 'string', multiple: true } : { type: ['model', 'effort', 'worker', 'by', 'title', 'allow', 'default-worker'].includes(k) ? 'string' : 'boolean' }]))
   const { values: opt, positionals } = parseArgs({ args, options, allowPositionals: true })
   if (positionals.length !== count) throw new Error(help)
   const [name, argument] = positionals
@@ -126,14 +128,8 @@ async function main() {
   }
   const { projectId, database, defaultCwd } = await call('/context', { cwd: process.cwd() })
   if (cmd === 'roster') {
-    const roster = await call('/roster', { projectId })
-    return console.log(opt.json ? JSON.stringify(roster) : ['Default bro: ' + roster.defaultWorker, ...roster.workers.map(w => [
-      '\n' + w.id + ' · ' + w.capability + ' · ' + w.cli + ' ' + (w.version || 'unknown version'),
-      'Installed: ' + w.installed + ' · Login: ' + w.loginStatus + ' · Steering: ' + w.steering,
-      'Default model: ' + (w.defaultModel || 'CLI default') + ' · Effort: ' + (w.defaultEffort || 'CLI default'),
-      'Models: ' + w.models.map(m => m.id + (m.efforts?.length ? ' [' + m.efforts.join(', ') + ']' : '')).join(', '),
-      'Note: ' + (w.note || '—'), ...w.rules.map(r => 'Rule: ' + r), ...w.warnings.map(r => 'Notice: ' + r)
-    ].join('\n'))].join('\n'))
+    const roster = rosterOutput(await call('/roster', { projectId }), { full: opt.full, worker: opt.worker })
+    return console.log(opt.json ? JSON.stringify(roster) : rosterText(roster))
   }
   if (cmd === 'note') {
     const proposal = await call('/note-proposal', { projectId, worker: name, note: argument })
@@ -170,7 +166,7 @@ async function main() {
     if (cmd === 'say' || cmd === 'review') {
       receipt = cmd === 'review'
         ? await call('/review', { name, by: opt.by, model: opt.model, effort: opt.effort, projectId, env: modelVariables(process.env) })
-        : await call('/say', { name, projectId, env: modelVariables(process.env), title: opt.title, text: argument, model: opt.model, effort: opt.effort, worker: opt.worker, defaultCwd, worktree: opt.worktree })
+        : await call('/say', { name, projectId, env: modelVariables(process.env), title: opt.title, text: argument, attachments: opt.attach?.map(p => resolve(p)), model: opt.model, effort: opt.effort, worker: opt.worker, defaultCwd, worktree: opt.worktree })
       const labels = { injected: '已注入 / injected', queued: '排到下一轮 / queued for next turn', rejected: '被拒 / rejected' }
       const ack = receipt.name + ' message #' + receipt.number + ', turn ' + receipt.turn + ' (' +
         (labels[receipt.outcome] || (receipt.kind === 'queued' ? 'queued' : 'prompt accepted')) + ')' + (receipt.reason ? ': ' + receipt.reason : '') +

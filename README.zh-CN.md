@@ -23,7 +23,7 @@
 需要 macOS、Node.js 24+、Claude Code，以及至少一个工人 CLI。先通过该 CLI 自己的方式登录。
 
 ```sh
-npm install -g cc-bro@0.3.0
+npm install -g cc-bro@0.3.1
 cc-bro setup
 cc-bro init --allow codex,pi:openai-codex,agy,cursor-agent --default-worker codex
 cc-bro roster
@@ -58,8 +58,12 @@ cc-bro done auth-fix
 
 ## 升级与开发
 
-安装 0.3.0 后，先等想保留的任务完成，再运行 `cc-bro shutdown` 和 `cc-bro setup`。停机会取消该服务所有项目的运行单、排队单；未完成轮次不会自动续跑，已写文件保留。新版命令能停止 0.1.0、M2 和 0.2.0 服务。0.2 的项目权限、会话、工单会保留，不会扩大允许名单。[从 0.1.0 升级](docs-site/zh/upgrade.md)还需在新登记库登记实际项目，经理室已移除。
+安装 0.3.1 后，先等想保留的任务完成，再运行 `cc-bro shutdown` 和 `cc-bro setup`。停机会取消该服务所有项目的运行单、排队单；未完成轮次不会自动续跑，已写文件保留。新版命令能停止 0.1.0、M2、0.2.0 和 0.3.0 服务。0.2 的项目权限、会话、工单会保留，不会扩大允许名单。[从 0.1.0 升级](docs-site/zh/upgrade.md)还需在新登记库登记实际项目，经理室已移除。
 
 源码开发先运行 `npm ci --prefix ui`、`npm run build --prefix ui`，再运行 `npm test`。测试用离线工人，也检查本机 Codex 协议和 Claude Code 后台通知。公开文档用 `npm ci --prefix docs-site && npm run build --prefix docs-site` 生成。`npm run install:local` 会打包并安装；测试请设置独立 `CC_BRO_HOME` 和 `CC_BRO_PORT=0`。
 
 [Apache-2.0 许可证](LICENSE)
+
+花名册自动发现已安装、已登录 CLI 的所有模型，不自动扩大项目权限。配置页可按 bro 隐藏模型系列，支持全局与项目覆盖；隐藏的不会给经理看，派单也拒绝。内置介绍在 lib/model-catalog.json，用户覆盖放 ~/.cc-bro/models.json、按 id 合并。CLI 实报能力与上限优先于 API 目录。派带图任务用重复的 `say --attach 文件`，详见[能力与附件](docs-site/zh/model-inputs.md)。
+
+花名册默认紧凑输出：未允许的 bro 只列一行；允许的模型按档位／fast 变体合并，上一代与被取代型号折叠。`roster --json` 同样精简，需要详细能力、上限或具体变体时再用 `roster --worker codex --json --full`。

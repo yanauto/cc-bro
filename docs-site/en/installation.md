@@ -14,7 +14,7 @@ claude --version
 ## Install the CLI and skill
 
 ```sh
-npm install -g cc-bro@0.3.0
+npm install -g cc-bro@0.3.1
 cc-bro setup
 ```
 

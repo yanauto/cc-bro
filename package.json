@@ -1,6 +1,6 @@
 {
   "name": "cc-bro",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Give Claude Code a live roster of your CLIs and models, with persistent workers, worktrees, reviews and a local board.",
   "license": "Apache-2.0",
   "author": "yanauto",
@@ -36,7 +36,7 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test test/offline.test.mjs test/m1.test.mjs test/m2.test.mjs test/pi-profile.test.mjs test/plugin.test.mjs test/protocol.test.mjs test/upgrade.test.mjs test/roster.test.mjs",
+    "test": "node --test test/offline.test.mjs test/m1.test.mjs test/m2.test.mjs test/pi-profile.test.mjs test/plugin.test.mjs test/protocol.test.mjs test/upgrade.test.mjs test/roster.test.mjs test/models.test.mjs test/roster-output.test.mjs",
     "test:plugin": "node --test test/plugin.test.mjs",
     "prepack": "node scripts/package-board.mjs",
     "install:local": "sh scripts/install-local.sh"

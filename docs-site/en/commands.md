@@ -11,7 +11,7 @@ Run project commands from a registered project root or one of its subdirectories
 
 ## Read the roster and propose notes
 
-`cc-bro roster [--json]` lists allowed workers and their CLI, models, efforts, login, capabilities, notes and rules. Read it before every dispatch.
+`cc-bro roster [--worker ID] [--full] [--json]` defaults to compact model families, effective defaults, input capabilities, notes and rules. Denied bros get one line without models; older models are folded. Use `--worker ID` for one bro and `--full` for exact variants, limits and full metadata. Read the compact view before every dispatch.
 
 `cc-bro note WORKER TEXT [--json]` proposes a note. A user must accept it in Settings; proposing does not edit the current note.
 
@@ -41,3 +41,6 @@ Quote the message and any title containing spaces. Without `--bg`, `say` and `re
 | --- | --- |
 | `cc-bro stop NAME [--json]` | Stop one named worker in the current project. |
 | `cc-bro shutdown` | Stop the local runner, including running and queued turns across all its projects. Unfinished turns do not restart automatically. |
+
+
+Use repeated `say --attach FILE` to send [native image attachments](model-inputs.md) to a supported CLI + model.

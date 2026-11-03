@@ -28,7 +28,7 @@ test('roster reads CLI metadata, reflects project overrides, and note proposals 
   assert.deepEqual(r.workers[0].efforts,['low','medium'])
   assert.equal(r.workers.find(w=>w.id==='agy').defaultModel,'fixture-model')
   writeFileSync(join(h.cwd,'fixture-signed-out'),'')
-  assert.equal((await h.json('roster')).workers.find(w=>w.id==='cursor-agent').loginStatus,'signed-out')
+  assert.equal((await h.json('roster')).workers.some(w=>w.id==='cursor-agent'),false)
   const global=await web('settings/global')
   Object.assign(global,{allow:['codex'],worker:'codex',rules:['Keep changes scoped'],entries:{codex:{model:'fixture-model',effort:'low',note:'User note'}}})
   await web('settings/global',global)

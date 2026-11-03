@@ -6,13 +6,15 @@ import { dirname, join } from 'node:path'
 const args = process.argv.slice(2)
 const option = name => args[args.indexOf(name) + 1]
 const provider = args.includes('--models') ? option('--models').split('/')[0] : option('--provider')
+if (args.includes('--no-session') && args.includes('--provider') && !args.includes('--model')) process.exit(2)
 const fakeKey = 'synthetic-' + 'credential-for-offline-test'
 const send = obj => process.stdout.write(JSON.stringify(obj) + '\n')
 if (args.includes('--version')) {
   console.log('1.4.0')
 } else if (args.includes('--list-models')) {
   console.log('provider  model           context  max-out  thinking  images')
-  console.log('deepseek  deepseek-flash  1M       384K     yes       yes')
+  if (existsSync('fixture-pi-models.json')) for (const m of JSON.parse(readFileSync('fixture-pi-models.json','utf8'))) console.log(m.provider + '  ' + m.id + '  272K  128K  yes  yes')
+  else console.log('deepseek  deepseek-flash  1M       384K     yes       yes')
 } else if (args[0] === 'auth') {
   if (args[1] === 'check' && args.includes('--no-refresh')) {
     if (process.env.CC_BRO_FIXTURE_CANARY) {
@@ -31,7 +33,7 @@ if (args.includes('--version')) {
   const { createInterface } = await import('node:readline')
   for await (const line of createInterface({input:process.stdin})) {
     const req=JSON.parse(line)
-    const data=req.type==='get_state' ? {model:{provider,id:'fixture-default'},thinkingLevel:'low'} : req.type==='get_available_models' ? {models:[{provider,id:'fixture-default',name:'Fixture',reasoning:true}]} : {levels:['off','low','high']}
+    const data=req.type==='get_state' ? {model:{provider,id:'fixture-default'},thinkingLevel:'low'} : req.type==='get_available_models' ? {models:existsSync('fixture-pi-models.json') ? JSON.parse(readFileSync('fixture-pi-models.json','utf8')) : [{provider,id:'fixture-default',name:'Fixture',reasoning:true,input:['text','image'],contextWindow:272000,maxTokens:128000}]} : {levels:['off','low','high']}
     send({id:req.id,type:'response',success:true,data})
   }
 } else {
@@ -53,6 +55,7 @@ if (args.includes('--version')) {
     send({ type: 'agent_settled', aborted: false })
   }
   function prompt(req) {
+    if (req.images?.length) appendFileSync('fixture-images', JSON.stringify(req.images) + '\n')
     current = req.message
     steered = ''
     if (current === 'reject prompt') return ack(req, null, 'rejected prompt')

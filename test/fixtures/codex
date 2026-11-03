@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createInterface } from 'node:readline'
 import { randomUUID } from 'node:crypto'
-import { existsSync, appendFileSync } from 'node:fs'
+import { existsSync, appendFileSync, readFileSync } from 'node:fs'
 const args = process.argv.slice(2)
 const send = e => console.log(JSON.stringify(e))
 const lines = createInterface({input:process.stdin})
@@ -15,9 +15,9 @@ if (args[0] === 'app-server') {
     const ok = result => send({id:r.id,result})
     switch (r.method) {
       case 'initialize': ok({}); break
-      case 'model/list': ok({data:[{model:'fixture-model',displayName:'Fixture model',isDefault:true,defaultReasoningEffort:'medium',supportedReasoningEfforts:[{reasoningEffort:'low'},{reasoningEffort:'medium'}]}]}); break
+      case 'model/list': ok({data:existsSync('fixture-models.json') ? JSON.parse(readFileSync('fixture-models.json','utf8')) : [{inputModalities:['text','image'],model:'fixture-model',displayName:'Fixture model',isDefault:true,defaultReasoningEffort:'medium',supportedReasoningEfforts:[{reasoningEffort:'low'},{reasoningEffort:'medium'}]}]}); break
       case 'config/read': ok({config:{model:'fixture-model',model_reasoning_effort:'medium'}}); break
-      case 'account/read': ok({account:{type:'chatgpt'},requiresOpenaiAuth:true}); break
+      case 'account/read': ok({account:existsSync('codex-signed-out') ? null : {type:'chatgpt'},requiresOpenaiAuth:true}); break
       case 'thread/start':
       case 'thread/resume':
         id = r.params.threadId ?? randomUUID()

@@ -6,7 +6,7 @@ Your project’s Claude Code chat is the manager. cc-bro gives it a roster of yo
 
 ## Your tools, one roster
 
-Run `cc-bro roster --json` before dispatch. The installed skill has Claude read the current allowlist, available models, login status, defaults, user notes and rules, then choose the bro for the task.
+Run `cc-bro roster --json` before dispatch. The compact view gives Claude permitted model families, project permissions, login status, defaults, user notes and rules. Denied bros take one line; effort/fast variants share a row and older models are folded. Use `roster --worker codex --json --full` when you need detailed metadata or exact variants. It checks input capabilities first, then model descriptions and picks; user notes and rules take priority.
 
 | Worker | Integration | Follow-up during a turn |
 | --- | --- | --- |
@@ -23,7 +23,7 @@ Built-in adapters expose what each CLI reports. Missing cache data stays unknown
 Requires macOS, Node.js 24+, Claude Code and at least one worker CLI. Sign in with the worker’s own CLI.
 
 ```sh
-npm install -g cc-bro@0.3.0
+npm install -g cc-bro@0.3.1
 cc-bro setup
 cc-bro init --allow codex,pi:openai-codex,agy,cursor-agent --default-worker codex
 cc-bro roster
@@ -48,7 +48,7 @@ Pass `--model EXACT_ID --effort LEVEL` on `say` or `review` using the roster. Fo
 
 ## Settings and boundaries
 
-Open **Settings** on the board to inspect CLIs, open installation or login commands in Terminal, set global defaults or project overrides, edit rules and notes, and test custom command templates. The template trial starts a new conversation and checks memory after resuming its exact ID. It uses two real prompts and may consume your CLI subscription.
+Open **Settings** on the board to inspect CLIs, open installation or login commands in Terminal, set global defaults or project overrides, edit rules and notes, hide model families globally or per project, and test custom command templates. Hidden models are absent from the manager’s roster and rejected on dispatch. New installations and logins are discovered automatically without granting project permission. The template trial starts a new conversation and checks memory after resuming its exact ID. It uses two real prompts and may consume your CLI subscription.
 
 The allowlist is enforced on every `say` and again before queued work starts. Rules are reminders in receipts and ticket details; Claude interprets them. Settings affect subsequent dispatches. Active turns keep their settings. The manager can propose a note with `cc-bro note WORKER "suggestion"`; only a user confirmation in Settings applies it.
 
@@ -58,8 +58,10 @@ Choose `--worktree` on the first message to start from committed HEAD in an inde
 
 ## Upgrading and development
 
-After installing 0.3.0, wait for work you want to preserve, then run `cc-bro shutdown` and `cc-bro setup`. Shutdown stops running and queued work across all projects on that runner. Unfinished turns do not automatically resume; written files remain. The new command can stop 0.1.0, M2 and 0.2.0 runners. Existing 0.2 project policies, sessions and tickets carry forward without broadening access. [0.1.0 migration](docs-site/en/upgrade.md) also needs registration in the new registry; the old manager room is gone.
+After installing 0.3.1, wait for work you want to preserve, then run `cc-bro shutdown` and `cc-bro setup`. Shutdown stops running and queued work across all projects on that runner. Unfinished turns do not automatically resume; written files remain. The new command can stop 0.1.0, M2, 0.2.0 and 0.3.0 runners. Existing 0.2 project policies, sessions and tickets carry forward without broadening access. [0.1.0 migration](docs-site/en/upgrade.md) also needs registration in the new registry; the old manager room is gone.
 
 From source, use `npm ci --prefix ui`, `npm run build --prefix ui` and `npm test`. Tests use offline model fixtures; the installed Codex schema and Claude Code background-notification integration are also checked. Build public docs with `npm ci --prefix docs-site && npm run build --prefix docs-site`. `npm run install:local` builds and installs a tarball; use an isolated `CC_BRO_HOME` and `CC_BRO_PORT=0` for testing.
 
 [Apache-2.0 license](LICENSE)
+
+Model descriptions ship in `lib/model-catalog.json`; optional `~/.cc-bro/models.json` merges overrides by ID. CLI capability and limit data takes precedence over API catalog values. Send supported media with repeated `say --attach FILE`; see [Capabilities and attachments](docs-site/en/model-inputs.md).

@@ -10,7 +10,7 @@ const esc = text => text.replaceAll('&', '&amp;').replaceAll('"', '&quot;').repl
 const version = JSON.parse(read(join(root, '../package.json'))).version
 const groups = [
   [['Getting started', '入门'], [['installation', 'Installation', '安装'], ['quickstart', 'Your first ticket', '第一张工单'], ['workers', 'Workers and login', '工人选择与登录'], ['allowlist', 'Project allowlist', '项目允许名单']]],
-  [['Choose your crew', '选择工人'], [['roster', 'Worker roster', '工人花名册'], ['settings', 'Settings', '配置页'], ['custom-cli', 'Custom CLI templates', '自定义 CLI 模板']]],
+  [['Choose your crew', '选择工人'], [['roster', 'Worker roster', '工人花名册'], ['settings', 'Settings', '配置页'], ['model-inputs', 'Capabilities and media', '能力与附件'], ['custom-cli', 'Custom CLI templates', '自定义 CLI 模板']]],
   [['Working with tickets', '处理工单'], [['steering', 'Steering', '运行中插话'], ['review-worktree', 'Worktrees and review', '独立工作区与审查'], ['board', 'The board', '看板']]],
   [['Reference', '查阅'], [['commands', 'Command reference', '命令参考'], ['upgrade', 'Upgrading', '升级'], ['faq', 'FAQ', '常见问题']]]
 ]
@@ -29,7 +29,7 @@ if (changes[0]?.v !== version || new Set(changes.map(c => c.v)).size !== changes
 function body(source, file) {
   const md = new Marked({ renderer: {
     link(token) {
-      if (!token.href.endsWith('.md')) return false
+      if (!token.href.endsWith('.md') || /^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(token.href)) return false
       const path = relative(root, resolve(dirname(file), token.href)).split(sep)
       const id = path.at(-1).slice(0, -3)
       if (path.length !== 2 || !['zh', 'en'].includes(path[0]) || !ids.includes(id)) throw Error('Unknown guide link: ' + token.href)

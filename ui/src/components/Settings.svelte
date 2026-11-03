@@ -5,6 +5,8 @@
   import { lang } from '../lib/i18n.svelte.js'
   let { scope } = $props()
   let config = $state(null), roster = $state(null), selected = $state('codex'), loading = $state(true), working = $state(''), error = $state('')
+  let modelSearch = $state('')
+  let savedEntries = $state({})
   let newId = $state(''), templateText = $state(''), trialStatus = $state(''), drafts = $state({}), templateBase = $state('')
   const l = (en, zh) => lang.current === 'zh' ? zh : en
   let entry = $derived(config?.entries[selected] ?? {})
@@ -12,10 +14,15 @@
   let ids = $derived([...new Set([...(roster?.workers.map(w => w.id) ?? []), ...Object.keys(config?.entries ?? {})])])
   let effective = $derived(config?.effective)
   let inheritedEntry = $derived(config?.inherited?.entries?.[selected] ?? {})
+  let hiddenModels = $derived(entry.hiddenModels ?? inheritedEntry.hiddenModels ?? [])
+  const modelKey = id => id.split('/').at(-1).replace(/\[[^\]]*\]$/, '').replace(/(?:-(?:low|medium|high|xhigh|max|fast|thinking))+$/, '')
+  const hidden = id => hiddenModels.some(m => modelKey(m) === modelKey(id))
+  function hideModel(id, checked) { set('hiddenModels', checked ? [...new Set([...hiddenModels, modelKey(id)])] : hiddenModels.filter(m => modelKey(m) !== modelKey(id))) }
   let isCustom = $derived(selected.startsWith('custom:'))
   function choose(id, preserve = true) {
     if (preserve && selected.startsWith('custom:') && templateText !== templateBase) drafts[selected] = templateText
     selected = id
+    modelSearch = ''
     templateBase = JSON.stringify(config?.entries[id]?.template ?? config?.inherited?.entries?.[id]?.template ?? config?.presets?.[id] ?? {}, null, 2)
     templateText = drafts[id] ?? templateBase
     trialStatus = ''
@@ -24,6 +31,7 @@
     error = ''; loading = true
     try {
       config = await request('GET', '/api/settings/' + scope)
+      savedEntries = Object.fromEntries(Object.entries(config.effective?.entries ?? config.entries).map(([id, e]) => [id, { model: e.model, effort: e.effort }]))
       config.allow ??= []; config.worker ??= ''
       drafts = {}
       choose(selected, false)
@@ -50,6 +58,7 @@
       if (isCustom && templateText !== templateBase) drafts[selected] = templateText
       for (const [id, text] of Object.entries(drafts)) if (text.trim() !== '{}') config.entries[id] = { ...config.entries[id], template: JSON.parse(text) }
       config = await request('POST', '/api/settings/' + scope, config)
+      savedEntries = Object.fromEntries(Object.entries(config.effective?.entries ?? config.entries).map(([id, e]) => [id, { model: e.model, effort: e.effort }]))
       drafts = {}; choose(selected, false)
       toast(l('Saved. Applies to the next dispatch.', '已保存，下次派活生效。'))
     } catch (e) { error = e.message }
@@ -100,10 +109,14 @@
       <div class="panel editor">
         <div class="worker-title"><h2>{selected}</h2><span class="badge">{isCustom ? l('Degraded · template', '降级 · 模板') : l('Full · native adapter', '全功能 · 原生适配器')}</span></div>
         {#if detected}<dl><div><dt>{l('CLI / version', 'CLI / 版本')}</dt><dd>{detected.cli} · {detected.version || l('Unknown', '未知')}</dd></div><div><dt>{l('Installed / login', '安装 / 登录')}</dt><dd>{detected.installed ? l('Installed', '已安装') : l('Not installed', '未安装')} · {detected.loginStatus}</dd></div><div><dt>{l('Steering / cache', '插话 / 缓存')}</dt><dd>{detected.steering === 'inject' ? l('Current turn', '当前轮注入') : l('Next turn', '下一轮')} · {detected.cache ? l('Reported when available', '接口有值时显示') : l('Not reported', '暂无读数')}</dd></div><div><dt>{l('Detected defaults', '检测到的默认值')}</dt><dd>{detected.detectedModel || l('CLI chooses', '由 CLI 选择')} · {detected.detectedEffort || l('CLI chooses', '由 CLI 选择')}</dd></div></dl>
+          <p class="hint">{l('Saved effective defaults', '已保存的生效默认值')}: {savedEntries[selected]?.model || detected.detectedModel || l('CLI chooses', '由 CLI 选择')} · {savedEntries[selected]?.effort || detected.detectedEffort || l('CLI chooses', '由 CLI 选择')}</p>
           {#each detected.warnings as warning}<p class="hint">{warning}</p>{/each}
           {#if detected.install || detected.upgrade || detected.login}<div class="actions"><button class="btn" disabled={!!working || !(detected.installed ? detected.upgrade : detected.install)} onclick={() => action(detected.installed ? 'upgrade' : 'install')}>{detected.installed ? l('Upgrade in Terminal', '在终端升级') : l('Install in Terminal', '在终端安装')}</button><button class="btn" disabled={!!working || !detected.installed || !detected.login} onclick={() => action('login')}>{l('Log in with CLI', '打开 CLI 登录')}</button></div><p class="hint">{detected.loginHint || detected.login}</p>{/if}
         {:else}<p class="hint">{l('Save and refresh to detect this CLI. Custom templates must pass the trial first.', '保存后刷新可检测此 CLI。自定义模板需先试跑通过。')}</p>{/if}
         <div class="two"><label>{l('Model override', '模型覆盖')}<input list="worker-models" value={entry.model ?? ''} oninput={e => set('model', e.currentTarget.value)} placeholder={inheritedEntry.model || detected?.defaultModel || l('Inherit CLI default', '继承 CLI 默认')} /><datalist id="worker-models">{#each detected?.models ?? [] as m}<option value={m.id}>{m.name || m.id}{m.efforts?.length ? ' · ' + m.efforts.join(', ') : ''}</option>{/each}</datalist></label><label>{l('Effort override', '档位覆盖')}<input list="worker-efforts" value={entry.effort ?? ''} oninput={e => set('effort', e.currentTarget.value)} placeholder={inheritedEntry.effort || detected?.defaultEffort || l('Inherit CLI default', '继承 CLI 默认')} /><datalist id="worker-efforts">{#each detected?.efforts ?? [] as effort}<option value={effort}></option>{/each}</datalist></label></div>
+        {#if detected?.models.length}<div class="models"><h3>{l('Model visibility', '模型可见性')}</h3><p class="hint">{l('Models are detected automatically. Hide a model family to remove it from the manager’s roster and reject dispatch, including effort/speed variants.', '模型自动检测。隐藏会从经理花名册移除并拒绝派单，包含同系列的档位／速度变体。')}</p><label>{l('Find a model', '查找模型')}<input bind:value={modelSearch} /></label>
+          {#if scope !== 'global'}<label class="check"><input type="checkbox" checked={entry.hiddenModels === undefined} onchange={e => { if (e.currentTarget.checked) { const copy = { ...entry }; delete copy.hiddenModels; config.entries[selected] = copy } else set('hiddenModels', [...hiddenModels]) }} />{l('Inherit global model visibility', '继承全局模型隐藏设置')}</label>{/if}
+          <div class="model-list">{#each detected.models.filter(m => m.id.toLowerCase().includes(modelSearch.toLowerCase())) as m}<article><label class="check"><input type="checkbox" checked={hidden(m.id)} onchange={e => hideModel(m.id, e.currentTarget.checked)} />{l('Hide', '隐藏')} {m.id}</label>{#if m.catalog}<p>{m.catalog.tier} · {m.catalog.grade} · {lang.current === 'zh' ? m.catalog.summary?.zh : m.catalog.summary?.en}</p>{#if m.catalog.stale}<p class="hint">{l('Description is stale; update catalog.', '简介已过期，请更新目录。')} {m.catalog.as_of}</p>{/if}{/if}<p class="hint">{l('Input', '输入')}: {Object.entries(m.capabilities.input).map(([k,v]) => k + '=' + v).join(' · ')}<br />{l('Context / max output', '上下文／最大输出')}: {m.capabilities.context_tokens} ({m.capabilities.sources.context_tokens}) / {m.capabilities.max_output_tokens} ({m.capabilities.sources.max_output_tokens})</p></article>{/each}</div></div>{/if}
         <label>{l('Your note', '你的备注')}<textarea rows="3" value={entry.note ?? ''} oninput={e => set('note', e.currentTarget.value)} placeholder={inheritedEntry.note || l('What this bro does well; constraints to remember.', '擅长什么，派活时需要记住什么。')}></textarea></label>
         <label>{l('Rules for this bro · one per line', '这个 bro 的规矩 · 每行一条')}<textarea rows="2" value={(entry.rules ?? []).join('\n')} oninput={e => set('rules', lines(e.currentTarget.value))}></textarea></label>
         {#if scope !== 'global' && config.entries[selected]}<button class="subtle" onclick={() => { delete config.entries[selected]; delete drafts[selected]; choose(selected, false) }}>{l('Remove this project override', '移除本项目覆盖')}</button>{/if}
@@ -130,6 +143,7 @@
   .btn { padding:10px 15px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-weight:600; white-space:nowrap } .btn:hover { background:var(--surface-2) } .btn:disabled { opacity:.5; cursor:wait } .primary { background:var(--accent); color:var(--bg); border-color:var(--accent) } .primary:hover { opacity:.9; background:var(--accent) }
   .roster button:not(.btn) { display:block; width:100%; text-align:left; padding:12px; border-radius:8px; overflow-wrap:anywhere } .roster button span { display:block; font-size:11px; color:var(--muted); margin-top:3px } .roster button.active { background:var(--accent-soft); color:var(--accent) }
   .badge { background:var(--surface-2); font-size:11px; padding:5px 9px; border-radius:20px; white-space:nowrap } .worker-title h2 { margin:0; overflow-wrap:anywhere } dl { margin:20px 0; display:grid; grid-template-columns:1fr 1fr; gap:16px } dt { font-size:11px; color:var(--muted) } dd { font-size:13px; margin:5px 0 0; overflow-wrap:anywhere }
+  .model-list { max-height:380px; overflow:auto } .model-list article { padding:12px 0; overflow-wrap:anywhere } .model-list p { font-size:12px; margin:6px 0 } .models { margin-top:24px }
   .hint { font-size:12px; overflow-wrap:anywhere } .actions { justify-content:flex-start; flex-wrap:wrap; margin:15px 0 } .template { border-top:1px solid var(--border); margin-top:20px; padding-top:20px } .subtle { font-size:12px; color:var(--accent) }
   .error { padding:14px; background:var(--err-soft,var(--surface-2)); color:var(--err); border-radius:8px; overflow-wrap:anywhere } .success { color:var(--accent); overflow-wrap:anywhere } article { border-top:1px solid var(--border); padding:18px 0 }
   .save { position:sticky; bottom:0; background:var(--bg); border-top:1px solid var(--border); margin-top:20px; padding:16px 0; z-index:10 } .save p { font-size:12px; margin:0 }

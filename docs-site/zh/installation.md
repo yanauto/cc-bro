@@ -14,7 +14,7 @@ claude --version
 ## 安装命令行和技能
 
 ```sh
-npm install -g cc-bro@0.3.0
+npm install -g cc-bro@0.3.1
 cc-bro setup
 ```
 

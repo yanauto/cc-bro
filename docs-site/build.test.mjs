@@ -30,6 +30,8 @@ test('release notes and translated guide links are generated from the public sou
   const commands = readFileSync(join(out, 'zh/docs/commands/index.html'), 'utf8')
   assert.match(commands, /href="\/docs\/commands\/"/)
   assert.match(commands, /cc-bro shutdown/)
+  const inputs = readFileSync(join(out, 'docs/model-inputs/index.html'), 'utf8')
+  assert.match(inputs, /href="https:\/\/github.com\/earendil-works\/pi\/blob\/main\/packages\/coding-agent\/docs\/rpc.md"/)
   rmSync(join(guide, 'zh/commands.md'))
   assert.throws(build, /Topic list and zh sources differ/)
   cpSync(join(source, 'zh/commands.md'), join(guide, 'zh/commands.md'))

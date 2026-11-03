@@ -1,5 +1,33 @@
 # Changelog
 
+## 0.3.1
+
+### English
+
+- The roster discovers all installed, signed-in CLI models and pi providers. Project permissions still apply. Hide model families globally or per project to remove them from the manager's roster and reject dispatch, including queued starts.
+- Model descriptions, tiers, grades and task picks ship in the package. Override entries by ID in `~/.cc-bro/models.json`. The skill checks input capabilities first, honors user notes and rules, and flags research older than 60 days.
+- Model inputs are intersected with the CLI's actual transport. CLI-reported context and output limits take precedence over catalog API ceilings; missing data stays unknown. `say --attach` delivers supported images through native Codex or pi, with snapshots preserved for queued turns.
+- Each bro can have a global default model and effort, with project overrides. The roster and Settings show effective defaults; subsequent dispatches use them without changing other CLI settings.
+- Text and JSON rosters are compact by default. Denied bros contain only ID and permission; effort/fast variants share one row, and catalog-labeled older models are folded. Use `--full` for exact variants, limits and full metadata, or `--worker ID` to inspect one bro. Notes and rules remain intact.
+- Bilingual Docs cover model capabilities, attachments, catalog overrides, hiding, defaults and compact queries.
+
+#### Upgrade from 0.3.0
+
+Install `cc-bro@0.3.1`, then run `cc-bro shutdown` and `cc-bro setup` to refresh the runner and skill. Let work you want to finish complete first: shutdown stops running and queued turns across all projects on that runner. Existing settings, sessions and tickets are preserved. **JSON consumers should use `roster --json --full` when they need detailed model fields.** Denied bros no longer expose models even in full mode; user-hidden models stay hidden. See the [upgrade guide](docs-site/en/upgrade.md).
+
+### 简体中文
+
+- 花名册自动发现已安装、已登录 CLI 的全部模型与 pi 厂商，仍遵守项目允许名单。可按 bro 全局隐藏模型系列，项目可覆盖；隐藏后从经理花名册移除，派单和排队开跑均拒绝。
+- 随包提供模型简介、定位、档次和任务 picks，可在 `~/.cc-bro/models.json` 按 ID 覆盖。skill 先核对输入能力，用户备注和规矩优先，研究超过 60 天提醒更新。
+- 输入能力取模型与当前 CLI 通道的交集；CLI 实报上下文和输出上限优先于目录 API 上限，缺数保留 unknown。`say --attach` 可通过原生 Codex 或 pi 交付支持的图片，并保存排队轮次的附件快照。
+- 每个 bro 可设全局默认模型和档位，项目可覆盖。花名册与配置页显示生效值，下次派活使用新配置，不改其他 CLI 的设置。
+- 文本和 JSON 花名册默认紧凑：未允许的 bro 只列名字和权限，档位／fast 变体合并一行，目录标记的旧型号折叠。`--full` 查询具体变体、上限和完整元数据，`--worker ID` 只查一个 bro；用户备注和规矩完整保留。
+- 中英文 Docs 补齐模型能力、附件、目录覆盖、隐藏、默认值和紧凑查询。
+
+#### 从 0.3.0 升级
+
+安装 `cc-bro@0.3.1`，再执行 `cc-bro shutdown`、`cc-bro setup` 更新服务和技能。想做完的单先等完成；停机会停止该服务下所有项目的运行单和排队单。原有设置、会话和工单保留。**依赖模型详细字段的 JSON 调用方改用 `roster --json --full`。** 完整模式也不展示未允许 bro 的模型，用户隐藏项仍不出现，详见[升级指南](docs-site/zh/upgrade.md)。
+
 ## 0.3.0
 
 ### English

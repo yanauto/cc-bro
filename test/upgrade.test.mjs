@@ -8,7 +8,7 @@ import { call } from '../lib/client.mjs'
 import { socketFor } from '../lib/paths.mjs'
 import { harness } from './harness.mjs'
 
-for (const [release, protocol] of [['0.1.0', 4], ['M2', 6], ['0.2.0', 7]]) {
+for (const [release, protocol] of [['0.1.0', 4], ['M2', 6], ['0.2.0', 7], ['0.3.0', 8]]) {
   test('upgrade from ' + release + ': guard normal commands, allow graceful shutdown, then start the new runner', async t => {
     const h = harness(t)
     const socket = socketFor(h.data)
@@ -42,7 +42,7 @@ for (const [release, protocol] of [['0.1.0', 4], ['M2', 6], ['0.2.0', 7]]) {
       await h.cli('shutdown')
       assert.equal(existsSync(join(h.data, 'runner.plist')), false)
       await h.cli('init', '--allow', 'codex')
-      assert.equal((await call('/ready', undefined, socket)).protocol, 8)
+      assert.equal((await call('/ready', undefined, socket)).protocol, 9)
       assert.deepEqual(await h.json('ls'), [])
     } finally {
       if (server.listening) await new Promise(resolve => server.close(resolve))
