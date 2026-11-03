@@ -6,13 +6,14 @@
   import { duration, ago, clock, liveElapsed } from '../lib/format.js'
   import Icon from './Icon.svelte'
 
-  let { projectId, ticketId, onclose } = $props()
+  let { projectId, ticketId, onclose, onselect } = $props()
 
   let detail = $state(null)
   let failed = $state(null)
 
   let live = $derived((app.tickets[projectId] || []).find(x => x.id === ticketId))
-  let ticket = $derived(live ? { ...detail, ...live } : detail)
+  let currentDetail = $derived(detail?.id === ticketId ? detail : null)
+  let ticket = $derived(live ? { ...currentDetail, ...live } : currentDetail)
   let signature = $derived(live ? `${live.status}|${live.flag}|${live.turn}|${live.updatedAt}` : '')
 
   $effect(() => {
@@ -61,8 +62,11 @@
       <h2>{ticket.title}</h2>
 
       <dl class="facts">
+        <div><dt>{t('worker')}</dt><dd class="mono">{ticket.provider}</dd></div>
         <div><dt>{t('model')}</dt><dd class="mono">{ticket.model}</dd></div>
         <div><dt>{t('turn')}</dt><dd>{ticket.turn}</dd></div>
+        <div><dt>{t('cache')}</dt><dd>{ticket.cacheRatio == null ? t('unknown') : (ticket.cacheRatio * 100).toFixed(1) + '%'}</dd></div>
+        {#if ticket.branch}<div><dt>{t('branch')}</dt><dd title={ticket.branch}>{ticket.branch}</dd></div>{/if}
         <div><dt>{t('elapsed')}</dt><dd>{duration(liveElapsed(ticket, app.now))}</dd></div>
         <div><dt>{t('updated')}</dt><dd>{ago(ticket.updatedAt, app.now)}</dd></div>
       </dl>
@@ -76,21 +80,37 @@
 
       <section>
         <h3>{t('lastReply')}</h3>
-        {#if detail?.lastReply}
-          <div class="reply">{detail.lastReply}</div>
+        {#if currentDetail?.lastReply}
+          <div class="reply">{currentDetail.lastReply}</div>
         {:else}
           <p class="muted">{t('noReply')}</p>
         {/if}
       </section>
 
-      {#if detail?.timeline?.length}
+      {#if ticket.parent}
+        <section><h3>{t('parent')}</h3><button class="link" onclick={() => onselect(ticket.parent)}>{ticket.parent} #{ticket.parentTurn}</button></section>
+      {/if}
+      {#if ticket.reviews?.length}
+        <section><h3>{t('children')}</h3>{#each ticket.reviews as r}<button class="link" onclick={() => onselect(r.id)}>{r.id} · #{r.turn}</button>{/each}</section>
+      {/if}
+      <section>
+        <h3>{t('files')}</h3>
+        {#if ticket.changedFiles?.length}
+          <ul class="items mono">{#each ticket.changedFiles as f}<li>{f.status} · {f.path}</li>{/each}</ul>
+        {:else}<p class="muted">{ticket.changedFiles == null ? t('unknown') : t('unchanged')}</p>{/if}
+      </section>
+      {#if ticket.interjections?.length}
+        <section><h3>{t('followups')}</h3><ul class="items">{#each ticket.interjections as i}<li>#{i.number} · {t('turn')} {i.turn} · {t(i.outcome === 'queued' ? 'next' : i.outcome)} · {i.reason}</li>{/each}</ul></section>
+      {/if}
+
+      {#if currentDetail?.timeline?.length}
         <section>
           <h3>{t('timeline')}</h3>
           <ol class="timeline">
-            {#each [...detail.timeline].reverse() as e, i (e.ts + i)}
+            {#each [...currentDetail.timeline].reverse() as e, i (e.ts + i)}
               <li class="k-{e.kind}">
                 <span class="tl-dot"></span>
-                <span class="tl-text">{e.summary}</span>
+                <span class="tl-text">#{e.turn} · {e.summary}</span>
                 <span class="tl-time">{clock(e.ts)}</span>
               </li>
             {/each}
@@ -202,6 +222,8 @@
     background: var(--bg);
   }
 
+  .items { padding-inline-start: 18px; font-size: 13px; overflow-wrap: anywhere; }
+  .link { display: block; padding: 3px 0; color: var(--accent); overflow-wrap: anywhere; text-align: left; }
   .muted { color: var(--muted); margin: 0; }
 
   .timeline {

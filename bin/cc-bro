@@ -1,23 +1,27 @@
 #!/usr/bin/env node
+import { createInterface } from 'node:readline/promises'
+import { chooseAllow, chooseDefault } from '../lib/worker-policy.mjs'
 import { parseArgs } from 'node:util'
-import { resolve } from 'node:path'
 import { setTimeout as sleep } from 'node:timers/promises'
-import { enter } from '../lib/enter.mjs'
-import { call, ready } from '../lib/client.mjs'
+import { modelVariables } from '../lib/model-env.mjs'
+import { setup } from '../lib/setup.mjs'
+import { call, ready, shutdown, shutdownEffect } from '../lib/client.mjs'
 import { platform } from '../lib/platform/index.mjs'
 import { Store } from '../lib/store.mjs'
 
 const help = [
-  'cc-bro      Open this project’s manager in the current terminal',
+  'cc-bro setup      Install or update the user skill',
+  'cc-bro init [--allow codex,pi:<provider>] [--default-worker worker]',
   'cc-bro ui [--no-open]',
   'cc-bro done <name>',
-  'cc-bro say <name> <message> [--model provider/id] [--title title] [--cwd dir] [--bg] [--json]',
+  'cc-bro say <name> <message> [--worktree] [--model id] [--title title] [--worker codex|pi:provider] [--bg] [--json]',
+  'cc-bro review <name> --by codex|pi:provider [--model id] [--bg] [--json]',
   'cc-bro ls [--json]',
   'cc-bro show <name> [--all] [--json]',
   'cc-bro watch',
   'cc-bro wait <name> <turn> [--json]',
   'cc-bro stop <name>',
-  'cc-bro shutdown'
+  'cc-bro shutdown   Stop the runner, including running and queued work'
 ].join('\n')
 
 function table(store) {
@@ -81,36 +85,55 @@ async function watch(store, runner) {
 
 async function main() {
   const [cmd, ...args] = process.argv.slice(2)
-  if (!cmd) return enter()
+  if (cmd === 'setup' && !args.length) return console.log(setup())
+  if (!cmd) return console.log(help)
   if (['-h', '--help', 'help'].includes(cmd)) return console.log(help)
-  const specs = { ui: [0, 'no-open'], done: [1, 'json'], say: [2, 'title', 'model', 'cwd', 'bg', 'json'], ls: [0, 'json'], show: [1, 'all', 'json'],
+  const specs = { init: [0, 'allow', 'default-worker', 'json'], ui: [0, 'no-open'], done: [1, 'json'], review: [1,'by','model','bg','json'], say: [2, 'worktree', 'title', 'model', 'worker', 'bg', 'json'], ls: [0, 'json'], show: [1, 'all', 'json'],
     watch: [0], wait: [2, 'json'], stop: [1, 'json'], shutdown: [0] }
   if (!Object.hasOwn(specs, cmd)) throw new Error(help)
   const [count, ...flags] = specs[cmd]
-  const options = Object.fromEntries(flags.map(k => [k, { type: ['model', 'cwd', 'title'].includes(k) ? 'string' : 'boolean' }]))
+  const options = Object.fromEntries(flags.map(k => [k, { type: ['model', 'worker', 'by', 'title', 'allow', 'default-worker'].includes(k) ? 'string' : 'boolean' }]))
   const { values: opt, positionals } = parseArgs({ args, options, allowPositionals: true })
   if (positionals.length !== count) throw new Error(help)
   const [name, argument] = positionals
-  const runner = await ready(cmd !== 'ui')
+  if (cmd === 'shutdown') {
+    console.error(shutdownEffect)
+    await shutdown()
+    return console.log('Runner stopped')
+  }
+  const runner = await ready()
+  if (cmd === 'init') {
+    const input = { cwd: process.cwd(), allow: opt.allow, worker: opt['default-worker'] }
+    let p
+    for (;;) {
+      try { p = await call('/register', input); break } catch (err) {
+        if (!process.stdin.isTTY || ![chooseAllow, chooseDefault].includes(err.message)) throw err
+        const reader = createInterface({ input: process.stdin, output: process.stderr })
+        try {
+          if (err.message === chooseAllow) input.allow = await reader.question('Allowed workers (codex and/or pi:<provider>, comma-separated): ')
+          else input.worker = await reader.question('Default worker from the allowed list: ')
+        } finally { reader.close() }
+      }
+    }
+    return console.log(opt.json ? JSON.stringify(p) : p.name + ': ' + p.allow.join(', ') + ' (default: ' + p.worker + ')')
+  }
   if (cmd === 'ui') {
     const { url } = await call('/ui', {})
     if (!opt['no-open']) await platform.openBrowser(url)
     return console.log(url)
   }
-  if (cmd === 'shutdown') { await call('/shutdown', {}); await platform.removeService(); return console.log('Runner stopped') }
   const { projectId, database, defaultCwd } = await call('/context', { cwd: process.cwd() })
   const store = new Store(true, database)
   try {
-    if (cmd === 'ls' && projectId) {
+    if (cmd === 'ls') {
       const tickets = store.ticketRows()
       return console.log(opt.json ? JSON.stringify(tickets) : ['TICKET\tTITLE\tSTATUS\tFLAG\tMODEL\tACTIVITY', ...tickets.map(t =>
         [t.id, t.title, t.status, t.flag || '-', t.model, t.activity].join('\t'))].join('\n'))
     }
-    if (cmd === 'ls') return console.log(opt.json ? JSON.stringify(store.list()) : table(store))
     if (cmd === 'watch') return await watch(store, runner)
     if (cmd === 'done') {
       const ticket = await call('/done', { name, projectId })
-      return console.log(opt.json ? JSON.stringify(ticket) : name + ' accepted')
+      return console.log(opt.json ? JSON.stringify(ticket) : [name + ' accepted', ticket.cleanupHint].filter(Boolean).join('\n'))
     }
     if (cmd === 'stop') {
       const result = await call('/stop', { name, projectId })
@@ -123,20 +146,28 @@ async function main() {
         return console.log(opt.json ? JSON.stringify(rows) : rows.map(m =>
           '[' + m.turn + '] ' + m.kind + (m.number ? ' #' + m.number : '') + ': ' + m.content + (m.error ? ' [' + m.error + ']' : '')).join('\n'))
       }
-      const reply = store.stmt("SELECT content FROM messages WHERE cid=? AND kind='reply' ORDER BY id DESC LIMIT 1").get(c.id)?.content
-      return console.log(opt.json ? JSON.stringify({ name, status: c.status, reply: reply ?? null }) : reply ?? 'No reply yet (' + c.activity + ')')
+      const result = store.result(c.id, c.turn)
+      const out = { ...store.detail(name), name, provider: c.provider, session: c.native_id, transport: c.transport, ...result }
+      return console.log(opt.json ? JSON.stringify(out) : [result.reply ?? result.error ?? c.activity, result.cachedInputTokens === null ? null : 'Cached input: ' + result.cachedInputTokens + ' tokens'].filter(Boolean).join('\n'))
     }
     let receipt
-    if (cmd === 'say') {
-      receipt = await call('/say', { name, projectId, title: opt.title, text: argument, model: opt.model, cwd: opt.cwd && resolve(opt.cwd), defaultCwd })
-      const ack = name + ' message #' + receipt.number + ', turn ' + receipt.turn +
-        (receipt.kind === 'steer' ? ' (steer accepted into current turn)' : receipt.kind === 'queued' ? ' (queued)' : ' (prompt accepted)')
+    if (cmd === 'say' || cmd === 'review') {
+      receipt = cmd === 'review'
+        ? await call('/review', { name, by: opt.by, model: opt.model, projectId, env: modelVariables(process.env) })
+        : await call('/say', { name, projectId, env: modelVariables(process.env), title: opt.title, text: argument, model: opt.model, worker: opt.worker, defaultCwd, worktree: opt.worktree })
+      const labels = { injected: '已注入 / injected', queued: '排到下一轮 / queued for next turn', rejected: '被拒 / rejected' }
+      const ack = receipt.name + ' message #' + receipt.number + ', turn ' + receipt.turn + ' (' +
+        (labels[receipt.outcome] || (receipt.kind === 'queued' ? 'queued' : 'prompt accepted')) + ')' + (receipt.reason ? ': ' + receipt.reason : '')
+      if (receipt.outcome === 'rejected') {
+        process.exitCode = 1
+        return console.log(opt.json ? JSON.stringify(receipt) : ack)
+      }
       if (opt.bg) return console.log(opt.json ? JSON.stringify(receipt) : ack)
       if (!opt.json) console.error(ack)
     }
     const turn = receipt?.turn ?? Number(argument)
     if (!Number.isSafeInteger(turn) || turn < 1) throw new Error('Expected a positive turn number')
-    const result = await waitFor(store, name, turn, receipt?.number, runner)
+    const result = await waitFor(store, receipt?.name ?? name, turn, receipt?.number, runner)
     if (opt.json) console.log(JSON.stringify({ name, ...receipt, ...result }))
     else if (result.reply) console.log(result.reply)
     if (result.status !== 'done') throw new Error(result.error || result.status)

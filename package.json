@@ -1,7 +1,7 @@
 {
   "name": "cc-bro",
-  "version": "0.1.0",
-  "description": "Manage projects in Claude Code, delegate tickets to pi agents, and follow their progress on a local board.",
+  "version": "0.2.0",
+  "description": "Delegate from your project’s Claude Code chat to named native Codex or pi sessions, with worktrees, reviews and a local board.",
   "license": "Apache-2.0",
   "author": "yanauto",
   "repository": {
@@ -10,20 +10,22 @@
   },
   "keywords": [
     "claude-code",
+    "codex",
     "pi",
     "agents",
-    "multi-agent",
-    "codex",
-    "deepseek"
+    "worktree",
+    "code-review",
+    "kanban"
   ],
   "files": [
     "bin",
     "lib",
-    "plugin",
-    "templates/room",
+    "skills",
     "bundle/board",
     "scripts/package-board.mjs",
+    "CHANGELOG.md",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE"
   ],
   "type": "module",
@@ -34,11 +36,10 @@
     "node": ">=24"
   },
   "scripts": {
-    "test": "node --test test/offline.test.mjs test/p2.test.mjs test/p3.test.mjs test/p4.test.mjs",
-    "test:live": "node --test test/live.test.mjs",
+    "test": "node --test test/offline.test.mjs test/m1.test.mjs test/m2.test.mjs test/pi-profile.test.mjs test/plugin.test.mjs test/protocol.test.mjs test/upgrade.test.mjs",
     "test:plugin": "node --test test/plugin.test.mjs",
-    "test:p2-live": "node --test test/p2-live.test.mjs",
-    "test:p4-live": "node --test test/p4-live.test.mjs",
-    "prepack": "node scripts/package-board.mjs"
-  }
+    "prepack": "node scripts/package-board.mjs",
+    "install:local": "sh scripts/install-local.sh"
+  },
+  "homepage": "https://cc-bro.yanauto.me/"
 }

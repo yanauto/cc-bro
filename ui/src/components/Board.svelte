@@ -2,13 +2,12 @@
   import { flip } from 'svelte/animate'
   import { crossfade, fade, scale } from 'svelte/transition'
   import { cubicOut } from 'svelte/easing'
-  import { app, go, removeProject, loadTickets, copyText } from '../lib/store.svelte.js'
+  import { app, go, loadTickets } from '../lib/store.svelte.js'
   import { t } from '../lib/i18n.svelte.js'
   import { shortPath } from '../lib/format.js'
   import Icon from './Icon.svelte'
   import TicketCard from './TicketCard.svelte'
   import Drawer from './Drawer.svelte'
-  import OpenButton from './OpenButton.svelte'
 
   let { id } = $props()
 
@@ -24,9 +23,6 @@
   let tickets = $derived(app.tickets[id] || [])
   let loaded = $derived(!!app.ticketsLoaded[id])
   let selected = $state(new URLSearchParams(location.search).get('ticket'))
-  let menuOpen = $state(false)
-  let confirming = $state(false)
-
   const order = {
     queued: (a, b) => a.createdAt.localeCompare(b.createdAt),
     working: (a, b) => (a.startedAt || a.updatedAt).localeCompare(b.startedAt || b.updatedAt),
@@ -40,15 +36,7 @@
     if (!app.tickets[id]) loadTickets(id)
   })
 
-  function onkey(e) {
-    if (e.key === 'Escape') {
-      if (confirming) confirming = false
-      else if (menuOpen) menuOpen = false
-    }
-  }
 </script>
-
-<svelte:window onkeydown={onkey} onclick={() => (menuOpen = false)} />
 
 <section class="board">
   <div class="bar">
@@ -59,21 +47,7 @@
       <div class="meta">
         <h1>{project?.name ?? id}</h1>
         {#if project}<div class="path mono" title={project.repoPath}>{shortPath(project.repoPath)}</div>{/if}
-      </div>
-    </div>
-    <div class="actions">
-      {#if project}<OpenButton {project} />{/if}
-      <div class="menu-wrap">
-        <button class="icon-btn" aria-label="More" aria-expanded={menuOpen} onclick={e => { e.stopPropagation(); menuOpen = !menuOpen }}>
-          <Icon name="more" size={18} />
-        </button>
-        {#if menuOpen}
-          <div class="menu" transition:scale={{ start: 0.96, duration: 120 }}>
-            <button class="item danger" onclick={() => { menuOpen = false; confirming = true }}>
-              <Icon name="trash" size={15} /> {t('remove')}
-            </button>
-          </div>
-        {/if}
+
       </div>
     </div>
   </div>
@@ -84,9 +58,7 @@
       <div>
         <strong>{t('noTickets')}</strong>
         <span>{t('noTicketsHint')}</span>
-        {#if project}
-          <span class="tipline">{t('tipBody')} <button class="cmdchip mono" onclick={() => copyText(`cd ${shortPath(project.repoPath)} && cc-bro`, t('copied'))}>cd {shortPath(project.repoPath)} && cc-bro</button></span>
-        {/if}
+
       </div>
     </div>
   {/if}
@@ -115,19 +87,7 @@
 </section>
 
 {#if selected}
-  <Drawer projectId={id} ticketId={selected} onclose={() => (selected = null)} />
-{/if}
-
-{#if confirming}
-  <div class="scrim" transition:fade={{ duration: 140 }} onclick={() => (confirming = false)} role="presentation"></div>
-  <div class="dialog" role="dialog" aria-modal="true" transition:scale={{ start: 0.96, duration: 160 }}>
-    <h2>{t('remove')}</h2>
-    <p>{t('removeConfirm')}</p>
-    <div class="dialog-actions">
-      <button class="btn btn-ghost" onclick={() => (confirming = false)}>{t('cancel')}</button>
-      <button class="btn btn-danger" onclick={() => { confirming = false; removeProject(id) }}>{t('confirmRemove')}</button>
-    </div>
-  </div>
+  <Drawer onselect={name => (selected = name)} projectId={id} ticketId={selected} onclose={() => (selected = null)} />
 {/if}
 
 <style>
@@ -179,42 +139,6 @@
     text-overflow: ellipsis;
   }
 
-  .actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex: none;
-  }
-
-  .menu-wrap { position: relative; }
-
-  .menu {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 6px);
-    z-index: 30;
-    min-width: 200px;
-    padding: 5px;
-    border-radius: 11px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    transform-origin: top right;
-  }
-
-  .item {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 8px 10px;
-    border-radius: 7px;
-    font-size: 13.5px;
-    text-align: left;
-  }
-  .item:hover { background: var(--surface-2); }
-  .item.danger { color: var(--err); }
-
   .hint {
     display: flex;
     align-items: flex-start;
@@ -228,16 +152,6 @@
   .hint div { display: flex; flex-direction: column; gap: 2px; }
   .hint strong { color: var(--fg); font-weight: 620; }
   .hint span { color: var(--muted); font-size: 13px; }
-  .tipline { margin-top: 4px; }
-  .cmdchip {
-    padding: 2px 8px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--fg);
-    font-size: 12px;
-  }
-  .cmdchip:hover { border-color: var(--accent); }
 
   .cols {
     flex: 1;
@@ -306,30 +220,6 @@
     border-radius: 10px;
   }
 
-  .scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    background: rgba(20, 18, 15, 0.38);
-  }
-
-  .dialog {
-    position: fixed;
-    z-index: 51;
-    left: 50%;
-    top: 50%;
-    translate: -50% -50%;
-    width: min(420px, calc(100vw - 32px));
-    padding: 22px;
-    border-radius: 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-  }
-  .dialog h2 { margin: 0 0 8px; font-size: 17px; }
-  .dialog p { margin: 0 0 20px; color: var(--muted); }
-  .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
-
   @media (max-width: 1100px) {
     .cols { overflow-x: auto; grid-template-columns: repeat(4, minmax(250px, 1fr)); padding-bottom: 6px; }
   }
@@ -339,6 +229,5 @@
     .bar { flex-wrap: wrap; }
     .cols { grid-template-columns: repeat(4, 82vw); scroll-snap-type: x mandatory; }
     .col { scroll-snap-align: start; }
-    .actions .btn { height: 32px; }
   }
 </style>

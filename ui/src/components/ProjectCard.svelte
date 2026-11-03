@@ -4,16 +4,13 @@
   import { ago, shortPath } from '../lib/format.js'
   import Icon from './Icon.svelte'
 
-  let { project, onopen, onchat } = $props()
+  let { project, onopen } = $props()
 
   const cols = ['queued', 'working', 'review', 'done']
   let total = $derived(cols.reduce((n, c) => n + (project.counts?.[c] || 0), 0))
   let active = $derived((project.counts?.working || 0) > 0)
 
-  function chat(e) {
-    e.stopPropagation()
-    onchat()
-  }
+
 </script>
 
 <div class="card" role="link" tabindex="0" onclick={onopen} onkeydown={e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onopen())}>
@@ -51,9 +48,7 @@
 
   <div class="foot">
     <span class="when">{t('updated')} {ago(project.updatedAt, app.now)}</span>
-    <button class="btn btn-ghost sm" onclick={chat}>
-      <Icon name="chat" size={14} /> {t('openChatShort')}
-    </button>
+    <span>{project.allow.join(', ')}</span>
   </div>
 </div>
 

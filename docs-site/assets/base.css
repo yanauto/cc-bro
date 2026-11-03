@@ -1,0 +1,49 @@
+:root {
+  color-scheme: light dark;
+  --bg: #f6f5f1;
+  --paper: #fff;
+  --tint: #efede7;
+  --ink: #1f1d1a;
+  --muted: #6f6a61;
+  --line: #d4d0c6;
+  --accent: #c4562d;
+  --accent-ink: #a8411d;
+  --on-accent: white;
+  --spot: #fae4d8;
+  --wire: #958c7a;
+  --grid: #d3cec2;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141311; --paper: #1d1c19; --tint: #252320; --ink: #ece9e2;
+    --muted: #a39e94; --line: #3d3a35; --accent: #e8825b; --accent-ink: #f0956f;
+    --on-accent: #1b120d; --spot: #482d23; --wire: #877e70; --grid: #3e3a33;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; color: inherit; font: inherit; }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+.wrap { width: min(1160px, calc(100% - 96px)); margin-inline: auto; }
+.mast { border-bottom: 1px solid var(--line); }
+.nav, nav, .brand, footer, footer div { display: flex; align-items: center; }
+.nav { justify-content: space-between; min-height: 68px; }
+.brand { gap: 9px; font: 720 24px/1 var(--mono); letter-spacing: -1.7px; }
+nav { gap: 25px; font-size: 14px; font-weight: 600; }
+nav a:hover, footer a:hover, .text-link:hover, figcaption a:hover { color: var(--accent-ink); }
+nav button { border: 0; background: none; font-size: 13px; padding: 6px 0 6px 3px; }
+.separator { height: 17px; width: 1px; background: var(--line); }
+
+@media(max-width: 800px) { .wrap { width: calc(100% - 42px); } }
+@media(max-width: 740px) {
+  .nav { min-height: 58px; }
+  nav { gap: 15px; font-size: 13px; }
+}
+@media(max-width: 570px) {
+  .mast .nav { flex-wrap: wrap; gap: 10px; padding-block: 12px; }
+  .mast .nav nav { gap: 14px; flex-wrap: wrap; }
+  .mast .nav:has(.home-shortcut) nav { width: 100%; justify-content: space-between; }
+}

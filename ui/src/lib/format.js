@@ -27,7 +27,7 @@ export function ago(iso, now = Date.now()) {
 
 export function clock(iso) {
   if (!iso) return ''
-  return new Date(iso).toLocaleTimeString(lang.current === 'zh' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  return new Date(iso).toLocaleTimeString(lang.current === 'zh' ? 'zh-CN' : 'en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' })
 }
 
 export function shortPath(p) {
@@ -40,17 +40,4 @@ export function liveElapsed(ticket, now) {
     return Math.max(ticket.elapsedMs || 0, now - new Date(ticket.startedAt).getTime())
   }
   return ticket.elapsedMs
-}
-
-export function homeOf(p) {
-  return (p || '').match(/^\/Users\/[^/]+|^\/home\/[^/]+|^[A-Z]:\\Users\\[^\\]+/i)?.[0] || ''
-}
-
-export function friendlyPath(p) {
-  const home = homeOf(p)
-  if (!home) return ''
-  const names = { Documents: t('folderDocuments'), Desktop: t('folderDesktop'), Downloads: t('folderDownloads') }
-  const parts = p.slice(home.length).split(/[\\/]/).filter(Boolean)
-  if (names[parts[0]]) return [names[parts[0]], ...parts.slice(1)].join(' › ')
-  return [t('folderHome') + ' (' + home.split(/[\\/]/).pop() + ')', ...parts].join(' › ')
 }

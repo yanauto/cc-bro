@@ -6,16 +6,10 @@
   import Icon from './components/Icon.svelte'
   import Home from './components/Home.svelte'
   import Board from './components/Board.svelte'
-  import Setup from './components/Setup.svelte'
-  import Welcome from './components/Welcome.svelte'
-  import DesktopHelp from './components/DesktopHelp.svelte'
-  import Settings from './components/Settings.svelte'
-  import ProviderDialogs from './components/ProviderDialogs.svelte'
 
   onMount(start)
 
   let project = $derived(app.route.name === 'board' ? app.projects.find(p => p.id === app.route.id) : null)
-  let envState = $derived(!app.env ? 'unknown' : app.env.ready && app.settings?.roomRoot !== null ? 'ready' : 'needed')
 
   $effect(() => {
     document.documentElement.lang = lang.current === 'zh' ? 'zh-CN' : 'en'
@@ -35,28 +29,10 @@
       {#if app.route.name === 'board'}
         <span class="sep" aria-hidden="true">/</span>
         <span class="crumb">{project?.name ?? ''}</span>
-      {:else if app.route.name === 'setup'}
-        <span class="sep" aria-hidden="true">/</span>
-        <span class="crumb">{t('setup')}</span>
-      {:else if app.route.name === 'welcome'}
-        <span class="sep" aria-hidden="true">/</span>
-        <span class="crumb">{t('welcomeAgain')}</span>
-      {:else if app.route.name === 'settings'}
-        <span class="sep" aria-hidden="true">/</span>
-        <span class="crumb">{t('settings')}</span>
       {/if}
-      {#if app.mock}
-        <span class="chip demo">{t('demo')}</span>
-      {/if}
+
     </div>
     <div class="right">
-      <button class="env {envState}" onclick={() => go('setup')} title={t('setup')}>
-        <span class="dot"></span>
-        {envState === 'ready' ? t('ready') : envState === 'needed' ? t('setupNeeded') : t('setup')}
-      </button>
-      <button class="icon-btn" class:active={app.route.name === 'settings'} onclick={() => go('settings')} title={t('settings')} aria-label={t('settings')}>
-        <Icon name="sliders" size={17} />
-      </button>
       <button class="icon-btn lang" onclick={() => setLang(lang.current === 'zh' ? 'en' : 'zh')} title="Language / 语言">
         <span>{lang.current === 'zh' ? 'EN' : '中'}</span>
       </button>
@@ -70,13 +46,7 @@
   {/if}
 
   <main>
-    {#if app.route.name === 'setup'}
-      <Setup />
-    {:else if app.route.name === 'welcome'}
-      <Welcome />
-    {:else if app.route.name === 'settings'}
-      <Settings />
-    {:else if app.route.name === 'board'}
+    {#if app.route.name === 'board'}
       {#key app.route.id}
         <Board id={app.route.id} />
       {/key}
@@ -84,9 +54,6 @@
       <Home />
     {/if}
   </main>
-
-  <DesktopHelp />
-  <ProviderDialogs />
 
   {#if app.toast?.message}
     {#key app.toast.id}
@@ -148,29 +115,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-
-  .demo { background: var(--warn-soft); color: var(--warn); }
-
-  .env {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    height: 28px;
-    padding: 0 11px;
-    border-radius: 999px;
-    font-size: 12.5px;
-    font-weight: 560;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--muted);
-  }
-  .env:hover { border-color: var(--border-strong); }
-  .env .dot { background: var(--faint); }
-  .env.ready .dot { background: var(--ok); }
-  .env.needed { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 35%, var(--border)); background: var(--warn-soft); }
-  .env.needed .dot { background: var(--warn); }
-
-  .icon-btn.active { color: var(--accent); background: var(--accent-soft); }
 
   .lang span { font-size: 12px; font-weight: 650; }
 

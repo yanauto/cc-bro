@@ -1,0 +1,21 @@
+# 项目允许名单
+
+只放行本项目能使用的工人标识。每个 pi 厂商需要单独授权。即使使用同一个订阅，允许原生 Codex 也不会自动允许 `pi:openai-codex`。
+
+## 选择默认工人
+
+```sh
+cc-bro init --allow codex,pi:deepseek --default-worker codex
+```
+
+在项目根目录执行。普通 `say` 会用默认工人；给新名字加 `--worker pi:deepseek` 可改用另一个已放行的工人。名单以外的标识会在派单前被拒。终端首次运行 `init` 会询问选择；脚本里应显式给出名单，多选时也要给默认值。
+
+## 改名单
+
+```sh
+cc-bro init --allow pi:deepseek --default-worker pi:deepseek
+```
+
+显式传入的新名单会替换旧名单。只留一个标识时，可省略默认值。再次执行不带参数的 `init` 会保留已有选择。工单已绑定的工人身份不会因修改默认值而改变。
+
+项目里只有一个自动忽略的 `.cc-bro/` 身份标记。登记信息和工单历史默认在 `~/.cc-bro/`。可在项目根目录或其子目录运行项目命令。

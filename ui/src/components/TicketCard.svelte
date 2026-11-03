@@ -6,6 +6,7 @@
   let { ticket, selected = false, onclick } = $props()
 
   let modelShort = $derived((ticket.model || '').split('/').pop())
+  let files = $derived(ticket.changedFiles ?? [])
   let elapsed = $derived(liveElapsed(ticket, app.now))
 </script>
 
@@ -26,8 +27,21 @@
     </div>
   {/if}
 
+  {#if ticket.branch || ticket.parent || ticket.reviews?.length || ticket.interjections?.length || files.length || ticket.cacheRatio != null}
+    <div class="collab">
+      {#if ticket.branch}<span title={ticket.branch}>{t('branch')}: {ticket.branch}</span>{/if}
+      {#if files.length}<span title={files.map(f => f.path).join(', ')}>{t('files')}: {files[0].path}{files.length > 1 ? ' (+' + (files.length - 1) + ')' : ''}</span>{/if}
+      {#if ticket.cacheRatio != null}<span>{t('cache')}: {(ticket.cacheRatio * 100).toFixed(1)}%</span>{/if}
+      {#if ticket.parent}<span>{t('parent')}: {ticket.parent} #{ticket.parentTurn}</span>{/if}
+      {#if ticket.reviews?.length}<span>{t('children')}: {ticket.reviews.length}</span>{/if}
+      {#if ticket.interjections?.length}
+        {@const last = ticket.interjections.at(-1)}
+        <span>{t('followups')} #{last.number}: {t(last.outcome === 'queued' ? 'next' : last.outcome)}</span>
+      {/if}
+    </div>
+  {/if}
   <div class="foot">
-    <span class="chip model" title={ticket.model}>{modelShort}</span>
+    <span class="chip model" title={ticket.provider + " · " + ticket.model}>{ticket.provider}{ticket.provider === ticket.model ? '' : ' · ' + modelShort}</span>
     {#if ticket.turn > 1}<span class="turn" title={t('turn')}>×{ticket.turn}</span>{/if}
     <span class="spacer"></span>
     {#if ticket.status === 'working' || ticket.status === 'review'}
@@ -117,6 +131,8 @@
     font-size: 12px;
   }
 
+  .collab { display: grid; gap: 3px; color: var(--muted); font-size: 12px; }
+  .collab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .foot {
     display: flex;
     align-items: center;

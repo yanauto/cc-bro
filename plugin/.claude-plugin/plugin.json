@@ -1,6 +1,0 @@
-{
-  "name": "cc-bro",
-  "version": "0.1.0",
-  "author": { "name": "yanauto" },
-  "description": "Delegate work to a named pi conversation, steer it, and collect its reply."
-}

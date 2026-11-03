@@ -1,0 +1,64 @@
+#!/usr/bin/env node
+import { createInterface } from 'node:readline'
+import { randomUUID } from 'node:crypto'
+import { existsSync, appendFileSync } from 'node:fs'
+const args = process.argv.slice(2)
+const send = e => console.log(JSON.stringify(e))
+const lines = createInterface({input:process.stdin})
+if (args[0] === 'app-server') {
+  if (existsSync('exec-only')) process.exit(2)
+  let id, current
+  for await (const line of lines) {
+    const r = JSON.parse(line)
+    if (!r.id) continue
+    const ok = result => send({id:r.id,result})
+    switch (r.method) {
+      case 'initialize': ok({}); break
+      case 'thread/start':
+      case 'thread/resume':
+        id = r.params.threadId ?? randomUUID()
+        ok({thread:{id}})
+        break
+      case 'thread/name/set': ok({}); break
+      case 'turn/steer': {
+        if (r.params.input[0].text === 'unknown ack') {
+          ok({turnId:'other-turn'})
+          break
+        }
+        if (r.params.expectedTurnId !== current || r.params.threadId !== id || r.params.input[0].text === 'decline')
+          send({id:r.id,error:{code:-32602,message:'Not steerable'}})
+        else {
+          ok({turnId:current})
+          if (r.params.input[0].text === 'finish') {
+            send({method:'item/completed',params:{threadId:id,item:{type:'agentMessage',text:'released'}}})
+            send({method:'turn/completed',params:{threadId:id,turn:{id:current,status:'completed'}}})
+          }
+        }
+        break
+      }
+      case 'turn/start': {
+        appendFileSync('starts', id + '\n')
+        const text = r.params.input[0].text
+        current = randomUUID()
+        ok({turn:{id:current}})
+        if (text === 'disconnect') process.exit(2)
+        if (text === 'hold') break
+        if (text === 'write fixture') appendFileSync('proof file.txt', 'proof')
+        if (text === 'slow') await new Promise(resolve => setTimeout(resolve, 700))
+        const notify = (method, fields) => send({method,params:{threadId:id,...fields}})
+        notify('item/completed',{item:{type:'agentMessage',text}})
+        notify('thread/tokenUsage/updated',{tokenUsage:{last:{cachedInputTokens:128,inputTokens:512}}})
+        notify('turn/completed',{turn:{id:current,status:'completed'}})
+        break
+      }
+      default: process.exit(3)
+    }
+  }
+} else if (args[0] === 'exec' && args.includes('--json') && args.at(-1) === '-') {
+  const id = args.includes('resume') ? args.at(-2) : randomUUID()
+  send({type:'thread.started',thread_id:id})
+  let text = ''
+  for await (const line of lines) text += line
+  send({type:'item.completed',item:{type:'agent_message',text}})
+  send({type:'turn.completed',usage:{cached_input_tokens:64,input_tokens:128}})
+} else process.exit(3)

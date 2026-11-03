@@ -5,7 +5,7 @@ import { dirname, join } from 'node:path'
 
 const args = process.argv.slice(2)
 const option = name => args[args.indexOf(name) + 1]
-const provider = option('--provider')
+const provider = args.includes('--models') ? option('--models').split('/')[0] : option('--provider')
 const fakeKey = 'synthetic-' + 'credential-for-offline-test'
 const send = obj => process.stdout.write(JSON.stringify(obj) + '\n')
 if (args.includes('--version')) {
@@ -28,7 +28,7 @@ if (args.includes('--version')) {
     console.log(fakeKey)
   } else process.exitCode = 1
 } else {
-  const model = option('--model')
+  const model = args.includes('--models') ? 'fixture-default' : option('--model')
   const id = option('--session-id')
   const sessions = option('--session-dir')
   const data = dirname(process.env.HOME)
@@ -38,9 +38,10 @@ if (args.includes('--version')) {
   let timer
   let steered = ''
   let current = ''
+  let queued = []
   const ack = (req, data, error) => send({ type: 'response', id: req.id, command: req.type, success: !error, error, data })
   function finish(text, error) {
-    send({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text }], stopReason: error ? 'error' : 'stop', errorMessage: error } })
+    send({ type: 'message_end', message: { role: 'assistant', content: [{ type: 'text', text }], usage: { input: 24, cacheRead: 32, cacheWrite: 8 }, stopReason: error ? 'error' : 'stop', errorMessage: error } })
     send({ type: 'agent_end', willRetry: false })
     send({ type: 'agent_settled', aborted: false })
   }
@@ -71,7 +72,7 @@ if (args.includes('--version')) {
       shell.once('exit', () => finish('orphan started'))
       return
     }
-    if (['hold', 'no abort', 'late'].includes(current)) {
+    if (['hold', 'no abort', 'late', 'uncleared'].includes(current)) {
       send({ type: 'tool_execution_start', toolName: 'read', args: { path: 'fixture.txt' } })
       timer = setInterval(() => {
         if (!existsSync('release')) return
@@ -87,8 +88,10 @@ if (args.includes('--version')) {
     if (req.type === 'get_state') return ack(req, { model: { provider, id: model === 'wrong-model' ? 'fallback' : model }, sessionId: id })
     if (req.type === 'prompt') return prompt(req)
     if (req.type === 'steer') {
-      if (req.message === 'reject steer') return ack(req, null, 'rejected steer')
-      if (current === 'late') {
+      if (req.message.startsWith('reject steer')) return ack(req, null, 'rejected steer')
+      if (req.message === 'pending') { queued.push(req.message); return ack(req, { disposition: 'queued' }) }
+      if (current === 'late' || current === 'uncleared') {
+        queued.push(req.message)
         clearInterval(timer)
         finish('original turn')
       } else {
@@ -103,7 +106,8 @@ if (args.includes('--version')) {
       send({ type: 'agent_settled', aborted: true })
       return ack(req)
     }
-    if (req.type === 'clear_queue') { appendFileSync('cleared', 'yes\n'); return ack(req) }
+    if (req.type === 'clear_queue' && current === 'uncleared') return ack(req, null, 'could not clear')
+    if (req.type === 'clear_queue') { appendFileSync('cleared', 'yes\n'); const steering = queued; queued = []; return ack(req, { steering, followUp: [] }) }
   }
   let buffer = ''
   process.stdin.setEncoding('utf8')
