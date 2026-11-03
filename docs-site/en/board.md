@@ -21,3 +21,6 @@ The first command opens a browser. The second prints the current local URL witho
 Use the detail view to read the reply and the timeline, including follow-up outcomes and links between writer and reviewer. The input cache ratio uses the worker’s last usage report. Missing usage is unknown, not a measured zero. Recorded file changes are a starting point for inspecting the checkout; they do not mean anything has been committed.
 
 In a terminal, `cc-bro ls` lists this project’s tickets, `cc-bro watch` follows activity, and `cc-bro show NAME --all` prints the conversation history.
+
+
+Open **Settings** in the header to manage the [roster](roster.md), [project policy](settings.md) and [custom templates](custom-cli.md). Ticket details include the selected effort, capability level, user note and rule reminders.

@@ -2,6 +2,7 @@ import { createRealApi } from './api.js'
 export const api = createRealApi()
 function parseRoute() {
   const h = decodeURIComponent(location.hash.slice(1))
+  if (h.startsWith('settings-')) return { name: 'settings', id: h.slice(9) }
   if (h.startsWith('p-')) return { name: 'board', id: h.slice(2) }
   return { name: 'home' }
 }

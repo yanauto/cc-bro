@@ -1,5 +1,6 @@
 const dict = {
   en: {
+    effort: 'Effort', capability: 'Capability', full: 'Full', degraded: 'Degraded', rules: 'Dispatch reminders', note: 'User note',
     branch: 'Branch', files: 'Changed files', unchanged: 'No file changes', unknown: 'Not reported',
     cache: 'Input cache hit rate', parent: 'Reviews ticket', children: 'Review tickets', followups: 'Interjections',
     injected: 'Injected', next: 'Queued for next turn', rejected: 'Rejected',
@@ -34,6 +35,7 @@ const dict = {
     ago: 'ago',
   },
   zh: {
+    effort: '档位', capability: '能力等级', full: '全功能', degraded: '降级', rules: '派单提醒', note: '用户备注',
     branch: '分支', files: '改动文件', unchanged: '无文件改动', unknown: '暂无数据',
     cache: '输入缓存命中率', parent: '审查的原单', children: '审查单', followups: '插话',
     injected: '已注入', next: '排到下一轮', rejected: '被拒',

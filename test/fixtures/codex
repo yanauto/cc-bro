@@ -5,6 +5,7 @@ import { existsSync, appendFileSync } from 'node:fs'
 const args = process.argv.slice(2)
 const send = e => console.log(JSON.stringify(e))
 const lines = createInterface({input:process.stdin})
+if (args.includes('--version')) { console.log('codex-cli fixture'); process.exit() }
 if (args[0] === 'app-server') {
   if (existsSync('exec-only')) process.exit(2)
   let id, current
@@ -14,6 +15,9 @@ if (args[0] === 'app-server') {
     const ok = result => send({id:r.id,result})
     switch (r.method) {
       case 'initialize': ok({}); break
+      case 'model/list': ok({data:[{model:'fixture-model',displayName:'Fixture model',isDefault:true,defaultReasoningEffort:'medium',supportedReasoningEfforts:[{reasoningEffort:'low'},{reasoningEffort:'medium'}]}]}); break
+      case 'config/read': ok({config:{model:'fixture-model',model_reasoning_effort:'medium'}}); break
+      case 'account/read': ok({account:{type:'chatgpt'},requiresOpenaiAuth:true}); break
       case 'thread/start':
       case 'thread/resume':
         id = r.params.threadId ?? randomUUID()
@@ -39,6 +43,7 @@ if (args[0] === 'app-server') {
       case 'turn/start': {
         appendFileSync('starts', id + '\n')
         const text = r.params.input[0].text
+        appendFileSync('selections', JSON.stringify(r.params) + '\n')
         current = randomUUID()
         ok({turn:{id:current}})
         if (text === 'disconnect') process.exit(2)

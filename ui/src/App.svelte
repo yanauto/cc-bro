@@ -6,6 +6,7 @@
   import Icon from './components/Icon.svelte'
   import Home from './components/Home.svelte'
   import Board from './components/Board.svelte'
+  import Settings from './components/Settings.svelte'
 
   onMount(start)
 
@@ -33,6 +34,7 @@
 
     </div>
     <div class="right">
+      <button class="settings-link" onclick={() => go('settings-' + (project?.id || 'global'))}>{lang.current === 'zh' ? '配置' : 'Settings'}</button>
       <button class="icon-btn lang" onclick={() => setLang(lang.current === 'zh' ? 'en' : 'zh')} title="Language / 语言">
         <span>{lang.current === 'zh' ? 'EN' : '中'}</span>
       </button>
@@ -46,7 +48,9 @@
   {/if}
 
   <main>
-    {#if app.route.name === 'board'}
+    {#if app.route.name === 'settings'}
+      {#key app.route.id}<Settings scope={app.route.id} />{/key}
+    {:else if app.route.name === 'board'}
       {#key app.route.id}
         <Board id={app.route.id} />
       {/key}

@@ -11,7 +11,7 @@ test('project identity, marker precedence, longest registered prefix, move and c
   execFileSync('git',['init','-q'],{cwd:h.cwd})
   await assert.rejects(h.json('init'), /Choose allowed workers/)
   await assert.rejects(h.json('init','--allow','codex,pi:deepseek'), /Choose a default/)
-  await assert.rejects(h.json('init','--allow','claude'), /Expected codex or pi/)
+  await assert.rejects(h.json('init','--allow','claude'), /Expected codex, pi/)
   const parent = await h.json('init','--allow','codex')
   assert.equal(parent.worker,'codex')
   assert.deepEqual(parent.allow,['codex'])

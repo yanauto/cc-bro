@@ -12,13 +12,13 @@ test('installed Codex schema accepts the native requests and publishes the field
   const schema = name => JSON.parse(readFileSync(join(dir,name+'.json'),'utf8'))
   const methods = name => schema(name).oneOf.flatMap(v => v.properties.method.enum)
   const client = methods('ClientRequest'), server = methods('ServerNotification')
-  for (const k of ['initialize','thread/start','thread/resume','thread/name/set','turn/start','turn/steer']) assert.ok(client.includes(k),k)
+  for (const k of ['initialize','thread/start','thread/resume','thread/name/set','turn/start','turn/steer','model/list','config/read','account/read']) assert.ok(client.includes(k),k)
   for (const k of ['item/started','item/completed','thread/tokenUsage/updated','turn/completed']) assert.ok(server.includes(k),k)
   for (const [type,fields] of Object.entries({
     ThreadStartParams:['cwd','approvalPolicy','model'],
     ThreadResumeParams:['threadId','cwd','approvalPolicy','model'],
     ThreadSetNameParams:['threadId','name'],
-    TurnStartParams:['threadId','input'],
+    TurnStartParams:['threadId','input','effort'],
     TurnSteerParams:['threadId','expectedTurnId','input']
   })) {
     const params = schema('v2/'+type)

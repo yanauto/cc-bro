@@ -94,7 +94,7 @@ test('worktree isolates edits, links cross-vendor review to a completed turn, su
   assert.equal(readFileSync(join(p.worktree,'proof file.txt'),'utf8'),'proof')
   await assert.rejects(h.cli('review','feature','--by','codex'),/different worker/)
   await assert.rejects(h.cli('review','feature','--by','pi:other','--model','other/a'),/not allowed/)
-  await assert.rejects(h.cli('review','feature','--by','claude'),/Choose --by codex or pi/)
+  await assert.rejects(h.cli('review','feature','--by','claude'),/Choose --by from cc-bro roster/)
   const r = await h.json('review','feature','--by','pi:deepseek')
   const child = await h.json('show',r.name)
   assert.equal(child.parent,'feature')

@@ -33,6 +33,6 @@ test('release notes and translated guide links are generated from the public sou
   rmSync(join(guide, 'zh/commands.md'))
   assert.throws(build, /Topic list and zh sources differ/)
   cpSync(join(source, 'zh/commands.md'), join(guide, 'zh/commands.md'))
-  writeFileSync(join(base, 'CHANGELOG.md'), log.replace('## 0.2.0', '## 0.3.0'))
+  writeFileSync(join(base, 'CHANGELOG.md'), log.replace('## ' + JSON.parse(readFileSync(join(base, 'package.json'), 'utf8')).version, '## 99.0.0'))
   assert.throws(build, /Missing current or duplicate changelog version/)
 })

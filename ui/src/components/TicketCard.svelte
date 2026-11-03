@@ -42,6 +42,8 @@
   {/if}
   <div class="foot">
     <span class="chip model" title={ticket.provider + " · " + ticket.model}>{ticket.provider}{ticket.provider === ticket.model ? '' : ' · ' + modelShort}</span>
+    {#if ticket.effort}<span class="turn">{ticket.effort}</span>{/if}
+    {#if ticket.capability === 'degraded'}<span class="turn">{t('degraded')}</span>{/if}
     {#if ticket.turn > 1}<span class="turn" title={t('turn')}>×{ticket.turn}</span>{/if}
     <span class="spacer"></span>
     {#if ticket.status === 'working' || ticket.status === 'review'}

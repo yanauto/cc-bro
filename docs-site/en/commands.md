@@ -9,11 +9,17 @@ Run project commands from a registered project root or one of its subdirectories
 | `cc-bro setup` | Install or update the user-level Claude Code skill and its launcher. |
 | `cc-bro init [--allow IDS] [--default-worker ID] [--json]` | Register this directory or update its policy. Separate IDs with commas. |
 
+## Read the roster and propose notes
+
+`cc-bro roster [--json]` lists allowed workers and their CLI, models, efforts, login, capabilities, notes and rules. Read it before every dispatch.
+
+`cc-bro note WORKER TEXT [--json]` proposes a note. A user must accept it in Settings; proposing does not edit the current note.
+
 ## Dispatch and accept
 
 ```text
-cc-bro say NAME MESSAGE [--worker ID] [--model MODEL] [--title TITLE] [--worktree] [--bg] [--json]
-cc-bro review NAME --by ID [--model MODEL] [--bg] [--json]
+cc-bro say NAME MESSAGE [--worker ID] [--model MODEL] [--effort LEVEL] [--title TITLE] [--worktree] [--bg] [--json]
+cc-bro review NAME --by ID [--model MODEL] [--effort LEVEL] [--bg] [--json]
 cc-bro wait NAME TURN [--json]
 cc-bro done NAME [--json]
 ```

@@ -16,3 +16,5 @@ cc-bro say auth-fix "Also cover an expired refresh token." --bg --json
 | `rejected` | Read the reason. If delivery was uncertain, inspect `cc-bro show auth-fix --all` before retrying so the instruction is not sent twice. |
 
 If the original turn has already finished, the second `say` simply starts a new turn in the same session. When you reopen the manager chat, use `cc-bro ls` and `cc-bro show auth-fix --json` to find the ticket and reattach a wait.
+
+For agy, cursor-agent and custom templates, follow-ups queue for the next turn. Changing model or effort during a running turn is rejected; wait until it finishes.

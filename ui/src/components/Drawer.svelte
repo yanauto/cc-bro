@@ -64,6 +64,8 @@
       <dl class="facts">
         <div><dt>{t('worker')}</dt><dd class="mono">{ticket.provider}</dd></div>
         <div><dt>{t('model')}</dt><dd class="mono">{ticket.model}</dd></div>
+        <div><dt>{t('effort')}</dt><dd>{ticket.effort || t('unknown')}</dd></div>
+        <div><dt>{t('capability')}</dt><dd>{ticket.capability ? t(ticket.capability) : t('unknown')}</dd></div>
         <div><dt>{t('turn')}</dt><dd>{ticket.turn}</dd></div>
         <div><dt>{t('cache')}</dt><dd>{ticket.cacheRatio == null ? t('unknown') : (ticket.cacheRatio * 100).toFixed(1) + '%'}</dd></div>
         {#if ticket.branch}<div><dt>{t('branch')}</dt><dd title={ticket.branch}>{ticket.branch}</dd></div>{/if}
@@ -86,6 +88,8 @@
           <p class="muted">{t('noReply')}</p>
         {/if}
       </section>
+      {#if ticket.note}<section><h3>{t('note')}</h3><p>{ticket.note}</p></section>{/if}
+      {#if ticket.rules?.length}<section><h3>{t('rules')}</h3><ul class="items">{#each ticket.rules as rule}<li>{rule}</li>{/each}</ul></section>{/if}
 
       {#if ticket.parent}
         <section><h3>{t('parent')}</h3><button class="link" onclick={() => onselect(ticket.parent)}>{ticket.parent} #{ticket.parentTurn}</button></section>

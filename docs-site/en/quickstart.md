@@ -8,11 +8,12 @@ Try a read-only task in a project you know. Start in the project root with a sig
 cc-bro init
 ```
 
-At the prompts, enter the worker IDs you allow, then pick a default if you listed more than one. One ID is enough. The next command uses that default, so the same example works with either backend.
+At the prompts, enter the worker IDs you allow, then pick a default if you listed more than one. One ID is enough. The next command uses that default, so the same example works with any allowed bro. A new project inherits global defaults if you have already saved them.
 
-## 2. Send a named ticket
+## 2. Read the roster and send a named ticket
 
 ```sh
+cc-bro roster
 cc-bro say test-map "Locate the tests and tell me how to run one. Do not edit files." --bg --json
 ```
 

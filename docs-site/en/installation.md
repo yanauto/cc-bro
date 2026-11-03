@@ -4,7 +4,7 @@ Install cc-bro once on your Mac. Then register each project from its own folder.
 
 ## What you need
 
-Use macOS with Node.js 24 or newer and Claude Code. Install the CLI for at least one worker: native Codex, pi, or both. You only need Git if you want to use worktrees. Run these checks in the terminal where you plan to install cc-bro:
+Use macOS with Node.js 24 or newer and Claude Code. Install the CLI for at least one worker: native Codex, pi, agy, cursor-agent or a custom CLI. Git is needed for worktrees and custom-template trials. Run these checks in the terminal where you plan to install cc-bro:
 
 ```sh
 node --version
@@ -14,7 +14,7 @@ claude --version
 ## Install the CLI and skill
 
 ```sh
-npm install -g cc-bro@0.2.0
+npm install -g cc-bro@0.3.0
 cc-bro setup
 ```
 

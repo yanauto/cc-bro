@@ -1,4 +1,4 @@
-async function request(method, path, body, signal) {
+export async function request(method, path, body, signal) {
   const res = await fetch(path, {
     method,
     signal,

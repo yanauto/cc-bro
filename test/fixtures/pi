@@ -27,6 +27,13 @@ if (args.includes('--version')) {
   } else if (args[1] === 'print-api-key' && process.env.CC_BRO_API_KEY === fakeKey) {
     console.log(fakeKey)
   } else process.exitCode = 1
+} else if (args.includes('--no-session')) {
+  const { createInterface } = await import('node:readline')
+  for await (const line of createInterface({input:process.stdin})) {
+    const req=JSON.parse(line)
+    const data=req.type==='get_state' ? {model:{provider,id:'fixture-default'},thinkingLevel:'low'} : req.type==='get_available_models' ? {models:[{provider,id:'fixture-default',name:'Fixture',reasoning:true}]} : {levels:['off','low','high']}
+    send({id:req.id,type:'response',success:true,data})
+  }
 } else {
   const model = args.includes('--models') ? 'fixture-default' : option('--model')
   const id = option('--session-id')

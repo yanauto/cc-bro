@@ -1,4 +1,10 @@
-# Upgrade from 0.1.0
+# Upgrading
+
+## From 0.2.0
+
+Install 0.3.0, let any work you want to preserve finish, then run `cc-bro shutdown` and `cc-bro setup`. The new runner preserves the 0.2 registry, tickets, sessions and per-project allowlists. New CLIs are not automatically allowed. Inspect `cc-bro roster`, then configure additional workers in Settings. A protocol mismatch gives the exact shutdown command.
+
+## From 0.1.0
 
 Version 0.2.0 removes manager rooms. The manager is now your Claude Code chat in the actual project. The new registry starts separately; it does not import 0.1.0 tickets, manager notes or project permissions.
 
@@ -9,7 +15,7 @@ If you want running and queued tickets to finish, let them finish first. Keep an
 ## 2. Install and stop the old service
 
 ```sh
-npm install -g cc-bro@0.2.0
+npm install -g cc-bro@0.3.0
 cc-bro shutdown
 cc-bro setup
 ```

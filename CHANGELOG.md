@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.3.0
+
+### English
+
+- A live project roster exposes permitted CLIs, models, effort levels, detected defaults, login, capabilities, rules and user notes. The Claude Code skill reads it before choosing a bro. `say` and `review` accept `--effort` and can change models between completed turns.
+- Built-in agy and cursor-agent workers join native Codex and pi. They resume by explicit session ID and queue active follow-ups. Cache is shown only when the CLI reports it. Every backend can use worktrees and participate in linked reviews.
+- Custom CLI templates provide new-session and resume commands, reply/ID extraction and optional model/effort arguments. A real two-turn memory trial is required before saving. Gemini CLI and OpenCode are editable, degraded presets rather than unverified full adapters.
+- The board has global and project Settings: read-only detection, install/update/login commands opened in Terminal, allowlists, defaults, notes and rules. Manager-proposed notes need user confirmation. Settings are stored only in cc-bro; credential-file values and other CLI configuration are untouched.
+- The website adds bilingual roster, custom CLI and Settings guides.
+
+#### Upgrade from 0.2.0
+
+Install `cc-bro@0.3.0`, then use the new `cc-bro shutdown` and rerun `cc-bro setup`. Wait first if you want active work to finish: shutdown cancels running and queued turns across the runner’s projects. Existing 0.2 policies, named sessions and ticket history are preserved; no new workers are allowed automatically. The old-runner shutdown path remains compatible with 0.1.0 and M2. See the [upgrade guide](docs-site/en/upgrade.md).
+
+### 简体中文
+
+- 新增实时项目花名册，列出允许的 CLI、模型、档位、检测默认值、登录、能力、规矩和用户备注。Claude Code 技能先读花名册再派活。`say` 和 `review` 支持 `--effort`，完成一轮后可换模型。
+- 内置 agy、cursor-agent，与原生 Codex、pi 并列。按明确会话 ID 续聊，运行中追加要求排到下一轮。CLI 有上报才显示缓存。各后端都可使用 worktree、互为关联审查者。
+- 自定义 CLI 模板支持新对话、续聊、回复／ID 提取、可选模型和档位参数，保存前必须通过真实两轮记忆试跑。Gemini CLI 和 OpenCode 是可编辑降级预设，不冒充已验证的全功能适配器。
+- 看板新增全局／项目配置：只读检测、在终端打开安装／升级／登录命令、允许名单、默认值、备注和规矩。经理提议的备注必须用户确认。配置只存在 cc-bro，不读凭据文件值，不写其他 CLI 配置。
+- 官网新增中英花名册、自定义 CLI、配置页指南。
+
+#### 从 0.2.0 升级
+
+安装 `cc-bro@0.3.0`，用新版执行 `cc-bro shutdown` 后重跑 `cc-bro setup`。想让在跑的任务完成就先等待；停机会取消服务所有项目的运行单和排队单。保留 0.2 原有权限、具名会话和工单历史，不自动放行新工人。旧服务停机仍兼容 0.1.0、M2，详见[升级指南](docs-site/zh/upgrade.md)。
+
 ## 0.2.0
 
 ### English

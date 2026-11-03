@@ -1,70 +1,65 @@
 # cc-bro
 
-[English](README.md) · [官网](https://cc-bro.yanauto.me/) · [文档](https://cc-bro.yanauto.me/zh/docs/) · [更新日志](CHANGELOG.md)
+[English](README.md) · [官网](https://cc-bro.yanauto.me/?lang=zh) · [文档](https://cc-bro.yanauto.me/zh/docs/) · [更新日志](CHANGELOG.md)
 
-在项目里已经打开的 Claude Code 对话中派单。每个具名工人保留自己的会话，可以并行干活、中途补要求，也可以明天继续今天的修复。每张单由你选工人。
+项目里正在用的 Claude Code 就是经理。cc-bro 把你已有的 CLI、模型、档位列成花名册，经理按任务挑选，再把活交给具名、可续聊的工人。可以并行、运行中插话、换人审查，以及在本地看板看结果。
 
-| 工人标识 | 在哪里执行 |
-| --- | --- |
-| `codex` | 本机原生 Codex CLI，使用 app-server 和已有登录。 |
-| `pi:<厂商>` | 本机 pi CLI，使用该厂商的模型和登录。比如 `pi:openai-codex` 通过 pi 使用 Codex 订阅，`pi:deepseek` 使用你配置的 DeepSeek 账户。 |
+## 你的工具，一份花名册
 
-Claude Code 是经理。需要 Claude 自己调查或审查时，让经理直接调用 Claude Code 的原生子 agent。
+派活前执行 `cc-bro roster --json`。安装的技能会让 Claude 先读当前允许名单、模型、登录状态、默认值、用户备注和规矩，再决定派给谁。
+
+| 工人 | 接入方式 | 运行中追加要求 |
+| --- | --- | --- |
+| `codex` | 原生 Codex app-server，沿用 CLI 登录 | 当前轮支持时注入，否则排到下一轮 |
+| `pi:<厂商>` | pi RPC，每个厂商单独放行，也支持 Codex 订阅 | pi 确认当轮投递时注入，否则排队 |
+| `agy` | 原生 Antigravity CLI，结构化事件、按 ID 续聊 | 排到下一轮 |
+| `cursor-agent` | 原生 Cursor CLI，结构化事件、按 ID 续聊 | 排到下一轮 |
+| `custom:<名称>` | 试跑通过的新会话／续聊命令模板 | 排队；无原生步骤和缓存读数 |
+
+内置适配器按各家 CLI 能力上报，缺少的缓存数据显示未知。Gemini CLI 和 OpenCode 提供可编辑模板预设，使用前必须通过真实两轮试跑。需要 Claude 干活，由经理调用 Claude Code 原生子 agent。
 
 ## 在项目里开始
 
-macOS 需要 Node.js 24+、Claude Code 和你选用的工人 CLI。先在各自的 CLI 登录。已实测 Codex CLI 0.162.1、pi 1.5.0。
+需要 macOS、Node.js 24+、Claude Code，以及至少一个工人 CLI。先通过该 CLI 自己的方式登录。
 
 ```sh
-npm install -g cc-bro@0.2.0
+npm install -g cc-bro@0.3.0
 cc-bro setup
-cc-bro init
+cc-bro init --allow codex,pi:openai-codex,agy,cursor-agent --default-worker codex
+cc-bro roster
 cc-bro ui
 ```
 
-在项目根目录运行 `init`。终端会询问允许哪些工人、谁是默认工人。脚本可直接传入这些选择。只允许一个标识时，它就是默认工人；允许多个时由你指定。已有项目再次运行 `init` 会保留原配置。
+`--allow` 只填你允许的工人。只允许一个时，它也作为默认。首次直接运行 `init` 会询问选择，已登记项目再次运行会保留原设置。在 Claude Code 输入 **/cc-bro** 并交代任务；看不到新技能时重新打开对话。
 
 ```sh
-cc-bro init --allow codex,pi:openai-codex,pi:deepseek --default-worker pi:deepseek
+cc-bro say auth-fix "修复 token 过期测试。" --worker codex --worktree --bg --json
+cc-bro wait auth-fix 1
+cc-bro say auth-fix "也覆盖 refresh token 过期。" --bg --json
+cc-bro wait auth-fix 2
+cc-bro review auth-fix --by pi:openai-codex --bg --json
+cc-bro show auth-fix --json
+cc-bro done auth-fix
 ```
 
-在当前 Claude Code 对话里输入 **/cc-bro**，例如“让一个工人在独立 worktree 修复令牌过期的问题，再让另一个工人审查。”若刚装的 skill 还没出现，在项目里重新打开 Claude Code。
+始终按回执中的名字和轮次等待。运行中插话可能已注入当前轮、排到下一轮或被拒；审查单单独验收。写单和审查者必须是不同工人标识；同一 pi 厂商的两个模型仍算同一个工人。
 
-## 派单、插话、审查
+按花名册给 `say` 或 `review` 加 `--model 模型ID --effort 档位`。pi 模型带 `厂商/` 前缀；Cursor 可选具体模型变体，也可对支持参数的明确模型传 `--effort`。同名绑定同一个 CLI，完成一轮后可以切换模型和档位。
 
-| 命令 | 结果 |
-| --- | --- |
-| `cc-bro say auth-fix "修复令牌过期问题。" --worktree --bg --json` | 项目默认工人从已提交的 HEAD 建独立 worktree。回执给出名字和轮次。 |
-| `cc-bro say coverage "找出登录测试。" --worker codex --bg` | 另一个名字可以并行。默认所有项目合计最多同时跑三轮。 |
-| `cc-bro say check "检查失败的测试。" --worker pi:openai-codex --bg` | pi 在允许的厂商内选模型。也可从 `pi --list-models` 选择完整的 `--model 厂商/模型ID`。此名字随后绑定实际模型。 |
-| `cc-bro say auth-fix "也覆盖刷新令牌过期。" --bg --json` | 两种后端都支持运行中插话。回执给出已注入、排到下一轮或被拒，以及原因。 |
-| `cc-bro wait auth-fix 1` | 按回执轮次等结果。若插话排到第 2 轮，等第 2 轮结束再送审。 |
-| `cc-bro review auth-fix --by codex` | 此例由 pi 写、Codex 审。审查单关联已完成的写单轮次。Codex 写的单也可交给 `--by pi:deepseek`。 |
-| `cc-bro show auth-fix --json` · `cc-bro done auth-fix` | 查看结果，满意后收单。审查单用自己回执中的名字单独验收。 |
+## 配置与边界
 
-审查者必须是另一个已放行的工人标识。原生 `codex` 与 `pi:openai-codex` 可以互审。同一 pi 厂商只算一个标识，换模型也一样。审查者拿到对应轮次的要求、最终回复和文件摘要。审完前先别继续改它正在看的工作目录。
+看板的**配置**页可以检测 CLI，在终端打开安装、升级或登录命令，设置全局默认和项目覆盖，编辑规矩与备注，试跑自定义命令模板。试跑会创建新会话，再按同一 ID 续聊核对记忆；会执行两个真实提示，可能消耗 CLI 订阅额度。
 
-需要独立 diff 时，在第一条消息加 `--worktree`。普通工单直接用登记的项目目录，能看到其中未提交的修改。收单后由经理决定怎样整合、何时回收 worktree。
+允许名单在每次派活时硬拒，排队单开跑前再次检查。规矩只在回执和工单详情中提醒，由 Claude 判断如何遵守。设置变更影响后续派活，在跑的轮次保持原配置。经理通过 `cc-bro note 工人 "建议"` 提议备注，只有用户在配置页确认才写入。
 
-## 工作在哪里进行
+设置和工单存在 `~/.cc-bro/`（可用 `CC_BRO_HOME` 改位置）。cc-bro 优先通过公开命令读取 CLI 信息，只取非敏感配置字段；不读取凭据文件的值，不写任何其他 CLI 的配置。登录、令牌刷新、原生会话存储由 CLI 自己处理。项目里只有自忽略的 `.cc-bro/` 身份标记。
 
-```mermaid
-flowchart LR
-  M["项目里的 Claude Code"] -->|"用户级 skill / CLI"| R["本机 cc-bro runner"]
-  R -->|"app-server"| X["原生 Codex 会话"]
-  R -->|"RPC"| P["pi 会话 · 用户选的厂商"]
-  R --> S["本机工单和事件"]
-  S --> B["本机看板"]
-```
+首次派单可加 `--worktree`，从已提交 HEAD 开独立分支。看板展示步骤、改动文件、审查关系、缓存和插话结果。`done` 保留 worktree，合并和回收由经理决定。
 
-看板按**排队 → 干活中 → 待验收 → 完成**展示步骤、分支、改动文件、审查关系、插话回执，以及工人最近一次上报的输入缓存命中率。结果先存入 SQLite，再通知经理。可以用 `ls`、`show`、`wait` 接着查，用 `stop 工单名` 叫停任务。
+## 升级与开发
 
-登记信息和工单历史在 `~/.cc-bro/`，项目里只有自行忽略的 `.cc-bro/` 身份标记。原生 Codex 在提交前发现 app-server 不可用时，可回退到 `exec --json`，此时插话排到下一轮。
+安装 0.3.0 后，先等想保留的任务完成，再运行 `cc-bro shutdown` 和 `cc-bro setup`。停机会取消该服务所有项目的运行单、排队单；未完成轮次不会自动续跑，已写文件保留。新版命令能停止 0.1.0、M2 和 0.2.0 服务。0.2 的项目权限、会话、工单会保留，不会扩大允许名单。[从 0.1.0 升级](docs-site/zh/upgrade.md)还需在新登记库登记实际项目，经理室已移除。
 
-**升级后旧服务还在运行？** 用新版执行 `cc-bro shutdown`，再重试原命令。停机会停止这个服务下所有项目正在运行和排队的单；想让它们完成，就等做完再停。未完成的轮次不会自动续跑，已经写入的文件会保留。
-
-安装后重新运行 `cc-bro setup`。0.1 项目需用 `init` 在独立的 0.2 登记库重新登记，旧工单库保留在磁盘上。早期 0.2 预览版的历史和仍受支持的权限会保留，原默认工人已撤掉的项目需要重新选默认值。
-
-**从源码安装**用 `npm run install:local`。在装有 Codex 和 Claude Code 的 Mac 上运行 `npm test`，可检查原生协议和经理端通知，测试回复来自本机替身。设置独立的 `CC_BRO_HOME` 和 `CC_BRO_PORT=0` 可以启动隔离实例。
+源码开发先运行 `npm ci --prefix ui`、`npm run build --prefix ui`，再运行 `npm test`。测试用离线工人，也检查本机 Codex 协议和 Claude Code 后台通知。公开文档用 `npm ci --prefix docs-site && npm run build --prefix docs-site` 生成。`npm run install:local` 会打包并安装；测试请设置独立 `CC_BRO_HOME` 和 `CC_BRO_PORT=0`。
 
 [Apache-2.0 许可证](LICENSE)

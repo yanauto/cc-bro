@@ -4,7 +4,7 @@
 
 ## 准备环境
 
-需要 macOS、Node.js 24 或更新版本，以及 Claude Code。至少安装一种工人 CLI：原生 Codex、pi，或两者都装。只有使用 worktree 时才需要 Git。在准备安装 cc-bro 的终端检查版本：
+需要 macOS、Node.js 24 或更新版本，以及 Claude Code。至少安装一种工人 CLI：原生 Codex、pi、agy、cursor-agent 或自定义 CLI。使用 worktree 和模板试跑需要 Git。在准备安装 cc-bro 的终端检查版本：
 
 ```sh
 node --version
@@ -14,7 +14,7 @@ claude --version
 ## 安装命令行和技能
 
 ```sh
-npm install -g cc-bro@0.2.0
+npm install -g cc-bro@0.3.0
 cc-bro setup
 ```
 

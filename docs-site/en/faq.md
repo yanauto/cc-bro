@@ -20,4 +20,12 @@ A worktree starts from committed HEAD. Check the writer’s branch and files on 
 
 ## Where do I enter a key or open the old manager room?
 
-In 0.2.0, sign in with your chosen worker CLI and open Claude Code in your actual project. The board has no provider-login screen. For an incompatible old runner, follow [Upgrade from 0.1.0](upgrade.md).
+Sign in with your chosen worker CLI and open Claude Code in your actual project. The board’s Settings page opens the CLI login command; it does not collect keys. For an incompatible old runner, follow [Upgrade from 0.1.0](upgrade.md).
+
+## A listed model fails at runtime
+
+A CLI catalog does not guarantee quota or account access. Inspect the error and select another allowed model explicitly. cc-bro does not buy credits or silently switch providers.
+
+## A custom worker has no cache or tool steps
+
+That is the documented degraded capability level. Session continuity is trial-tested, while Git file summaries, reviews and worktrees still work.

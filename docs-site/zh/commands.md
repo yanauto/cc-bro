@@ -9,11 +9,17 @@
 | `cc-bro setup` | 安装或更新用户级 Claude Code 技能和启动器。 |
 | `cc-bro init [--allow IDS] [--default-worker ID] [--json]` | 登记当前目录或更新项目策略，多个工人标识以逗号分隔。 |
 
+## 花名册与备注提议
+
+`cc-bro roster [--json]` 列出允许的工人、CLI、模型、档位、登录、能力、备注和规矩，派活前先读。
+
+`cc-bro note 工人 文本 [--json]` 只创建备注提议，用户在配置页确认才生效。
+
 ## 派单与收单
 
 ```text
-cc-bro say NAME MESSAGE [--worker ID] [--model MODEL] [--title TITLE] [--worktree] [--bg] [--json]
-cc-bro review NAME --by ID [--model MODEL] [--bg] [--json]
+cc-bro say NAME MESSAGE [--worker ID] [--model MODEL] [--effort LEVEL] [--title TITLE] [--worktree] [--bg] [--json]
+cc-bro review NAME --by ID [--model MODEL] [--effort LEVEL] [--bg] [--json]
 cc-bro wait NAME TURN [--json]
 cc-bro done NAME [--json]
 ```
