@@ -7,7 +7,7 @@
 - **Upgrade from `cc-bro`:**
 
 ```sh
-npm install -g broco
+npm install -g @yanauto/broco
 broco shutdown
 broco setup --migrate-cc-bro
 ```
